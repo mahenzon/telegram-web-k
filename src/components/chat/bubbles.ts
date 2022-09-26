@@ -3450,6 +3450,46 @@ export default class ChatBubbles {
     return result;
   }
 
+  private async messageContentHasToBeMuted(
+    message: Message.message,
+  ): Promise<boolean> {
+    // IDK why isPeerLocalMuted doesn't return real value for forwards (from channels)
+
+    // const isForwardFromChannel = this.isMessageForwardFromChannel(message, message.fwdFromId)
+    // if (message.fwdFromId && isForwardFromChannel) {
+    if (message.fwdFromId) {
+      // IDK why isPeerLocalMuted doesn't return real value for forwards (from channels)
+
+      const isMutedSourceFwd = await this.managers.appNotificationsManager.getPeerMuted(message.fwdFromId)
+
+      if (isMutedSourceFwd) {
+        // forward source is muted
+        return true
+      }
+    }
+
+    if (message.peerId !== message.fromId) {
+      // message is in group, skip mutes in DM
+
+      //
+      // const isMutedSender = await (
+      //   this.managers.appNotificationsManager.isPeerLocalMuted(message.fromId) as Promise<boolean>)
+
+      const isMutedSender = await this.managers.appNotificationsManager.getPeerMuted(message.fromId)
+      if (isMutedSender) {
+        // sender is muted
+        return true
+      }
+    }
+
+    return false;
+  }
+
+  // noinspection JSMethodCanBeStatic
+  private isMessageForwardFromChannel(message: Message.message, fwdFromId: PeerId): boolean {
+    return message.from_id && message.from_id._ === 'peerChannel' && message.fromId === fwdFromId;
+  }
+
   // reverse means top
   private async renderMessage(
     message: Message.message | Message.messageService,
@@ -3556,6 +3596,9 @@ export default class ChatBubbles {
       return ret;
     }
 
+    // todo: move to message props? wrap?
+    const hasToBeMuted: boolean = isMessage && await this.messageContentHasToBeMuted(message);
+
     let messageMedia: MessageMedia = isMessage && message.media;
 
     let messageMessage: string, totalEntities: MessageEntity[];
@@ -3570,8 +3613,24 @@ export default class ChatBubbles {
         totalEntities = t.totalEntities;
       } else if(((messageMedia as MessageMedia.messageMediaDocument)?.document as MyDocument)?.type !== 'sticker') {
         messageMessage = message.message;
-        // totalEntities = message.entities;
-        totalEntities = message.totalEntities;
+        totalEntities = message.entities;
+
+        if (hasToBeMuted) {
+          if (message.message) {
+            // mute whole message with Spoiler entity
+            // TODO: anything more elegant?
+            const muteMessageEntity: MessageEntity = {
+              _: "messageEntitySpoiler",
+              length: messageMessage.length,
+              offset: 0,
+            }
+            totalEntities.unshift(muteMessageEntity);
+          } else {
+            // no message text, do nothing
+          }
+        } else {
+          // not muted
+        }
       }
     } else {
       if(message.action._ === 'messageActionPhoneCall') {
@@ -4397,7 +4456,7 @@ export default class ChatBubbles {
       let title: HTMLElement | DocumentFragment;
       let titleVia: typeof title;
 
-      const isForwardFromChannel = message.from_id && message.from_id._ === 'peerChannel' && message.fromId === fwdFromId;
+      const isForwardFromChannel = this.isMessageForwardFromChannel((message as Message.message), fwdFromId)
 
       const isHidden = fwdFrom && !fwdFrom.from_id;
       if(message.viaBotId) {
@@ -4454,6 +4513,7 @@ export default class ChatBubbles {
           if(isStandaloneMedia) {
             args.unshift(document.createElement('br'));
           }
+          // todo: mark if muted?
           nameDiv.append(i18n('ForwardedFrom', [args]));
         }
       } else if(!message.viaBotId) {

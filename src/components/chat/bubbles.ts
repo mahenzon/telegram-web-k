@@ -3518,16 +3518,6 @@ export default class ChatBubbles {
 
       // TODO: work out how to mute blocked users (not urgent)
 
-      // // const dialog = await this.managers.appMessagesManager.getDialogOnly(message.fromId);
-      // const userProfile = await this.managers.appProfileManager.getProfileByPeerId(message.fromId);
-      // if (userProfile && userProfile._ === 'userFull' && userProfile.pFlags?.blocked) {
-      //   // user profile found and is blocked
-      //   return true;
-      // }
-
-      // const isMutedSender = await (
-      //   this.managers.appNotificationsManager.isPeerLocalMuted(message.fromId) as Promise<boolean>)
-
       const isMutedSender = await this.managers.appNotificationsManager.getPeerMuted(message.fromId)
       if (isMutedSender) {
         // sender is muted

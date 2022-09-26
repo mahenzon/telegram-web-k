@@ -3476,6 +3476,7 @@ export default class ChatBubbles {
 
 
     // TODO: private channels? how to? subscribe + mute + unsubscribe?
+    // temp solution: ignore if channel is private and i'm not subscribed!!
 
     const isForwardFromChannel = this.isMessageForwardFromChannel(message);
     if (isForwardFromChannel) {
@@ -3485,6 +3486,17 @@ export default class ChatBubbles {
       if (imSubscribedToChannel) {
         // don't mute my subscriptions
         return false;
+      }
+
+      // idk which one is better to use: `appPeersManager.getPeer` or `appChatsManager.getChatTyped`
+      const peerChat = await this.managers.appChatsManager.getChatTyped(message.fwdFromId);
+      if (peerChat._ === 'chatEmpty') {
+        return true
+      }
+      const peerChannel = await this.managers.appPeersManager.getPeer(message.fwdFromId);
+      if (peerChannel._ === 'channel' && peerChannel.pFlags?.left) {
+        // skip private channels which I'm not subscribed to
+        return true;
       }
     }
 

@@ -3478,7 +3478,7 @@ export default class ChatBubbles {
     // TODO: private channels? how to? subscribe + mute + unsubscribe?
     // temp solution: ignore if channel is private and i'm not subscribed!!
 
-    const isForwardFromChannel = this.isMessageForwardFromChannel(message);
+    const isForwardFromChannel = !!(message.views);
     if (isForwardFromChannel) {
       const dialogOnly = await this.managers.appMessagesManager.getDialogOnly(message.fwdFromId);
       // no data if not subscribed
@@ -3532,14 +3532,6 @@ export default class ChatBubbles {
     }
 
     return false;
-  }
-
-  // noinspection JSMethodCanBeStatic
-  private isMessageForwardFromChannel(message: Message.message): boolean {
-    return (
-      message.fwd_from
-      && message.fwd_from.from_id._ === 'peerChannel'
-    );
   }
 
   // reverse means top

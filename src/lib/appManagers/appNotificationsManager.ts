@@ -218,7 +218,7 @@ export class AppNotificationsManager extends AppManager {
       (peerNotifySettings.silent || (peerNotifySettings.mute_until !== undefined && (peerNotifySettings.mute_until * 1000) > tsNow()));
   }
 
-  private getPeerMuted(peerId: PeerId) {
+  public getPeerMuted(peerId: PeerId): Promise<boolean> {
     const ret = this.getNotifySettings({_: 'inputNotifyPeer', peer: this.appPeersManager.getInputPeerById(peerId)});
     return (ret instanceof Promise ? ret : Promise.resolve(ret))
     .then((peerNotifySettings) => this.isMuted(peerNotifySettings));

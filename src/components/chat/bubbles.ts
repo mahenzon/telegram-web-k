@@ -8,7 +8,7 @@ import type {AppImManager, ChatSavedPosition} from '../../lib/appManagers/appImM
 import type {HistoryResult, MyMessage} from '../../lib/appManagers/appMessagesManager';
 import type {MyDocument} from '../../lib/appManagers/appDocsManager';
 import type Chat from './chat';
-import {CHAT_ANIMATION_GROUP} from '../../lib/appManagers/appImManager';
+import appImManager, {CHAT_ANIMATION_GROUP} from '../../lib/appManagers/appImManager';
 import IS_TOUCH_SUPPORTED from '../../environment/touchSupport';
 import {logger} from '../../lib/logger';
 import rootScope from '../../lib/rootScope';
@@ -3453,12 +3453,40 @@ export default class ChatBubbles {
   private async messageContentHasToBeMuted(
     message: Message.message,
   ): Promise<boolean> {
+
+    // don't mute my messages
+    const myId = appImManager.myId;
+
+    if (message.fromId === myId) {
+      return false;
+    }
+
+    // which one?
+    // // don't mute my messages
+    // if (message.pFlags.out) {
+    //   return false;
+    // }
+
     // IDK why isPeerLocalMuted doesn't return real value for forwards (from channels)
 
-    // const isForwardFromChannel = this.isMessageForwardFromChannel(message, message.fwdFromId)
-    // if (message.fwdFromId && isForwardFromChannel) {
+
+    // TODO: private channels? how to? subscribe + mute + unsubscribe?
+
+    const isForwardFromChannel = this.isMessageForwardFromChannel(message);
+    if (isForwardFromChannel) {
+      const dialogOnly = await this.managers.appMessagesManager.getDialogOnly(message.fwdFromId);
+      // no data if not subscribed
+      const imSubscribedToChannel: boolean = !!(dialogOnly);
+      if (imSubscribedToChannel) {
+        // don't mute my subscriptions
+        return false;
+      }
+    }
+
+    // any forwards from muted peers
     if (message.fwdFromId) {
-      // IDK why isPeerLocalMuted doesn't return real value for forwards (from channels)
+      // IDK why isPeerLocalMuted doesn't return real value
+      //  for forwards from channels in groups
 
       const isMutedSourceFwd = await this.managers.appNotificationsManager.getPeerMuted(message.fwdFromId)
 
@@ -3471,7 +3499,6 @@ export default class ChatBubbles {
     if (message.peerId !== message.fromId) {
       // message is in group, skip mutes in DM
 
-      //
       // const isMutedSender = await (
       //   this.managers.appNotificationsManager.isPeerLocalMuted(message.fromId) as Promise<boolean>)
 
@@ -3486,8 +3513,11 @@ export default class ChatBubbles {
   }
 
   // noinspection JSMethodCanBeStatic
-  private isMessageForwardFromChannel(message: Message.message, fwdFromId: PeerId): boolean {
-    return message.from_id && message.from_id._ === 'peerChannel' && message.fromId === fwdFromId;
+  private isMessageForwardFromChannel(message: Message.message): boolean {
+    return (
+      message.fwd_from
+      && message.fwd_from.from_id._ === 'peerChannel'
+    );
   }
 
   // reverse means top
@@ -4456,7 +4486,8 @@ export default class ChatBubbles {
       let title: HTMLElement | DocumentFragment;
       let titleVia: typeof title;
 
-      const isForwardFromChannel = this.isMessageForwardFromChannel((message as Message.message), fwdFromId)
+      // is this right? shouldn't it be message.fwd_from.from_id._ ??
+      const isForwardFromChannel = message.from_id && message.from_id._ === 'peerChannel' && message.fromId === fwdFromId;
 
       const isHidden = fwdFrom && !fwdFrom.from_id;
       if(message.viaBotId) {

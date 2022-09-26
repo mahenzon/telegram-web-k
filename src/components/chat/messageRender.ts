@@ -7,7 +7,7 @@
 import {formatTime, getFullDate} from '../../helpers/date';
 import setInnerHTML from '../../helpers/dom/setInnerHTML';
 import formatNumber from '../../helpers/number/formatNumber';
-import {Message} from '../../layer';
+import { Message, MessageEntity } from '../../layer';
 import getPeerId from '../../lib/appManagers/utils/peers/getPeerId';
 import {i18n, _i18n} from '../../lib/langPack';
 import wrapEmojiText from '../../lib/richTextProcessor/wrapEmojiText';
@@ -205,6 +205,43 @@ export namespace MessageRender {
       }).element;
     }
 
+    if (
+      // TODO! has to be a universal func!!!
+      originalMessage
+      // is message
+      && (originalMessage as Message.message)._ === 'message'
+      // has text
+      && (originalMessage as Message.message).message
+      // is not in DM
+      && (originalMessage as Message.message).fromId !== (originalMessage as Message.message).peerId
+
+    ) {
+      // has all the required props.. probably!
+
+      const originalMessageSourcePeerId = (
+        (originalMessage as Message.message).fromId
+        || (originalMessage as Message.message).fwdFromId
+      );
+
+      if (
+        originalMessageSourcePeerId
+        && await rootScope.managers.appNotificationsManager.getPeerMuted(originalMessageSourcePeerId)
+      ) {
+        // is muted! wrap in a spoiler
+
+        // TODO: create a func for this!
+        const muteEntity: MessageEntity.messageEntitySpoiler = {
+          _: 'messageEntitySpoiler',
+          length: (originalMessage as Message.message).message.length,
+          offset: 0,
+        }
+        if ((originalMessage as Message.message).totalEntities) {
+          (originalMessage as Message.message).totalEntities.unshift(muteEntity);
+        } else {
+          (originalMessage as Message.message).totalEntities = [muteEntity];
+        }
+      }
+    }
     const {container, fillPromise} = wrapReply(originalPeerTitle, undefined, originalMessage, chat.isAnyGroup ? titlePeerId : undefined);
     await fillPromise;
     if(currentReplyDiv) {

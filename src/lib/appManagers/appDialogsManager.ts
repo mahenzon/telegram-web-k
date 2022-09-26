@@ -47,7 +47,12 @@ import SortedList, {SortedElementBase} from '../../helpers/sortedList';
 import debounce from '../../helpers/schedulers/debounce';
 import {FOLDER_ID_ALL, FOLDER_ID_ARCHIVE, NULL_PEER_ID, REAL_FOLDERS, REAL_FOLDER_ID} from '../mtproto/mtproto_config';
 import groupCallActiveIcon from '../../components/groupCallActiveIcon';
-import {Chat, Message, NotifyPeer} from '../../layer';
+import {
+  Chat,
+  Message,
+  MessageEntity,
+  NotifyPeer,
+} from '../../layer';
 import IS_GROUP_CALL_SUPPORTED from '../../environment/groupCallSupport';
 import mediaSizes from '../../helpers/mediaSizes';
 import appNavigationController, {NavigationItem} from '../../components/appNavigationController';
@@ -1764,6 +1769,30 @@ export class AppDialogsManager {
       } else if(draftMessage) {
         fragment = await middleware(wrapMessageForReply(draftMessage));
       } else if(lastMessage) {
+        if (
+          // if is text message
+          (lastMessage)._ === 'message'
+          // if has text
+          && (lastMessage as Message.message).message
+          // and has id
+          && (lastMessage as Message.message).fromId
+          // and is not DM
+          && (lastMessage as Message.message).fromId !== (lastMessage as Message.message).peerId
+          // and sender is muted
+          && await this.managers.appNotificationsManager.getPeerMuted((lastMessage as Message.message).fromId)
+        ) {
+          const muteEntity: MessageEntity.messageEntitySpoiler = {
+            _: 'messageEntitySpoiler',
+            length: (lastMessage as Message.message).message.length,
+            offset: 0,
+          }
+          // add spoiler entity to message text
+          if ((lastMessage as Message.message).totalEntities) {
+            (lastMessage as Message.message).totalEntities.unshift(muteEntity);
+          } else {
+            (lastMessage as Message.message).totalEntities = [muteEntity];
+          }
+        }
         fragment = await middleware(wrapMessageForReply(lastMessage, undefined, undefined, false, undefined, withoutMediaType));
       } else { // rare case
         fragment = document.createDocumentFragment();

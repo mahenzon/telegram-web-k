@@ -3680,7 +3680,11 @@ export default class ChatBubbles {
               length: messageMessage.length,
               offset: 0,
             }
-            totalEntities.unshift(muteMessageEntity);
+            if (totalEntities && totalEntities.length) {
+              totalEntities.unshift(muteMessageEntity);
+            } else {
+              totalEntities = [muteMessageEntity];
+            }
           } else {
             // no message text, do nothing
           }

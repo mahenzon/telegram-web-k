@@ -3491,7 +3491,7 @@ export default class ChatBubbles {
       // idk which one is better to use: `appPeersManager.getPeer` or `appChatsManager.getChatTyped`
       const peerChat = await this.managers.appChatsManager.getChatTyped(message.fwdFromId);
       if (peerChat._ === 'chatEmpty') {
-        return true
+        return true;
       }
       const peerChannel = await this.managers.appPeersManager.getPeer(message.fwdFromId);
       if (peerChannel._ === 'channel' && peerChannel.pFlags?.left) {
@@ -3509,12 +3509,21 @@ export default class ChatBubbles {
 
       if (isMutedSourceFwd) {
         // forward source is muted
-        return true
+        return true;
       }
     }
 
     if (message.peerId !== message.fromId) {
       // message is in group, skip mutes in DM
+
+      // TODO: work out how to mute blocked users (not urgent)
+
+      // // const dialog = await this.managers.appMessagesManager.getDialogOnly(message.fromId);
+      // const userProfile = await this.managers.appProfileManager.getProfileByPeerId(message.fromId);
+      // if (userProfile && userProfile._ === 'userFull' && userProfile.pFlags?.blocked) {
+      //   // user profile found and is blocked
+      //   return true;
+      // }
 
       // const isMutedSender = await (
       //   this.managers.appNotificationsManager.isPeerLocalMuted(message.fromId) as Promise<boolean>)
@@ -3522,7 +3531,7 @@ export default class ChatBubbles {
       const isMutedSender = await this.managers.appNotificationsManager.getPeerMuted(message.fromId)
       if (isMutedSender) {
         // sender is muted
-        return true
+        return true;
       }
     }
 

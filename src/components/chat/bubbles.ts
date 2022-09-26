@@ -3487,17 +3487,6 @@ export default class ChatBubbles {
         // don't mute my subscriptions
         return false;
       }
-
-      // idk which one is better to use: `appPeersManager.getPeer` or `appChatsManager.getChatTyped`
-      const peerChat = await this.managers.appChatsManager.getChatTyped(message.fwdFromId);
-      if (peerChat._ === 'chatEmpty') {
-        return true;
-      }
-      const peerChannel = await this.managers.appPeersManager.getPeer(message.fwdFromId);
-      if (peerChannel._ === 'channel' && peerChannel.pFlags?.left) {
-        // skip private channels which I'm not subscribed to
-        return true;
-      }
     }
 
     // any forwards from muted peers
@@ -3505,11 +3494,18 @@ export default class ChatBubbles {
       // IDK why isPeerLocalMuted doesn't return real value
       //  for forwards from channels in groups
 
-      const isMutedSourceFwd = await this.managers.appNotificationsManager.getPeerMuted(message.fwdFromId)
-
-      if (isMutedSourceFwd) {
-        // forward source is muted
-        return true;
+      // temp solution for private channels
+      try {
+        const isMutedSourceFwd = await this.managers.appNotificationsManager.getPeerMuted(message.fwdFromId);
+        if (isMutedSourceFwd) {
+          // forward source is muted
+          return true;
+        }
+      } catch (e) {
+        if ((e as ApiError).type === 'CHANNEL_PRIVATE') {
+          // is there a better way to check if channel is private?
+          return true;
+        }
       }
     }
 

@@ -3534,6 +3534,36 @@ export default class ChatBubbles {
     return false;
   }
 
+  public async postProcessMuteMessageWithEntities(
+    message: Message.message,
+    messageMessage: string,
+    totalEntities: MessageEntity[] | undefined,
+  ): Promise<{ messageMessage: string, totalEntities: MessageEntity[] }> {
+
+    const hasToBeMuted: boolean = await this.messageContentHasToBeMuted(message);
+    if (hasToBeMuted) {
+      if (messageMessage) {
+        // mute whole message with Spoiler entity
+        // TODO: anything more elegant?
+        const muteMessageEntity: MessageEntity = {
+          _: "messageEntitySpoiler",
+          length: messageMessage.length,
+          offset: 0,
+        }
+        if (totalEntities && totalEntities.length) {
+          totalEntities.unshift(muteMessageEntity);
+        } else {
+          totalEntities = [muteMessageEntity];
+        }
+      } else {
+        // no message text, do nothing
+      }
+    } else {
+      // not muted
+    }
+    return { messageMessage, totalEntities };
+  }
+
   // reverse means top
   private async renderMessage(
     message: Message.message | Message.messageService,
@@ -3640,9 +3670,6 @@ export default class ChatBubbles {
       return ret;
     }
 
-    // todo: move to message props? wrap?
-    const hasToBeMuted: boolean = isMessage && await this.messageContentHasToBeMuted(message);
-
     let messageMedia: MessageMedia = isMessage && message.media;
 
     let messageMessage: string, totalEntities: MessageEntity[];
@@ -3655,30 +3682,15 @@ export default class ChatBubbles {
         messageMessage = t.message;
         // totalEntities = t.entities;
         totalEntities = t.totalEntities;
+
+        ({ messageMessage, totalEntities } = await this.postProcessMuteMessageWithEntities(
+          message, messageMessage, totalEntities));
       } else if(((messageMedia as MessageMedia.messageMediaDocument)?.document as MyDocument)?.type !== 'sticker') {
         messageMessage = message.message;
         totalEntities = message.entities;
 
-        if (hasToBeMuted) {
-          if (message.message) {
-            // mute whole message with Spoiler entity
-            // TODO: anything more elegant?
-            const muteMessageEntity: MessageEntity = {
-              _: "messageEntitySpoiler",
-              length: messageMessage.length,
-              offset: 0,
-            }
-            if (totalEntities && totalEntities.length) {
-              totalEntities.unshift(muteMessageEntity);
-            } else {
-              totalEntities = [muteMessageEntity];
-            }
-          } else {
-            // no message text, do nothing
-          }
-        } else {
-          // not muted
-        }
+        ({ messageMessage, totalEntities } = await this.postProcessMuteMessageWithEntities(
+          message, messageMessage, totalEntities));
       }
     } else {
       if(message.action._ === 'messageActionPhoneCall') {

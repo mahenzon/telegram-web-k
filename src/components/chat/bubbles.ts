@@ -1815,6 +1815,21 @@ export default class ChatBubbles {
         });
         // appSidebarRight.forwardTab.open([mid]);
         return;
+      } else if(target.classList.contains('show-preview')) {
+        const showWebPreview = +bubble.dataset.showWebPreview;
+        console.log('show-preview clicked!', bubble.dataset, showWebPreview);
+        const newShowWebPreviewValue = Number(!showWebPreview);
+        bubble.dataset.showWebPreview = newShowWebPreviewValue.toString();
+        console.log('show-preview updated', bubble.dataset);
+        // toastNew({langPackKey: 'UnmuteWebPreview'})
+
+        toast('Toggle content mute: ' + Boolean(newShowWebPreviewValue));
+        const mid = +bubble.dataset.mid;
+        // const message = await this.managers.appMessagesManager.getMessageByPeer(this.peerId, mid);
+
+        // TODO: HOW TO RERENDER BUBBLE PREVIEW??
+        // await this.managers.appMessagesManager.updateMessage(this.peerId, mid);
+        return;
       }
 
       let isReplyClick = false;
@@ -3535,12 +3550,11 @@ export default class ChatBubbles {
   }
 
   public async postProcessMuteMessageWithEntities(
+    hasToBeMuted: boolean,
     message: Message.message,
     messageMessage: string,
     totalEntities: MessageEntity[] | undefined,
   ): Promise<{ messageMessage: string, totalEntities: MessageEntity[] }> {
-
-    const hasToBeMuted: boolean = await this.messageContentHasToBeMuted(message);
     if (hasToBeMuted) {
       if (messageMessage) {
         // mute whole message with Spoiler entity
@@ -3670,6 +3684,8 @@ export default class ChatBubbles {
       return ret;
     }
 
+    const hasToBeMuted: boolean = isMessage && await this.messageContentHasToBeMuted(message);
+
     let messageMedia: MessageMedia = isMessage && message.media;
 
     let messageMessage: string, totalEntities: MessageEntity[];
@@ -3684,13 +3700,13 @@ export default class ChatBubbles {
         totalEntities = t.totalEntities;
 
         ({ messageMessage, totalEntities } = await this.postProcessMuteMessageWithEntities(
-          message, messageMessage, totalEntities));
+          hasToBeMuted, message, messageMessage, totalEntities));
       } else if(((messageMedia as MessageMedia.messageMediaDocument)?.document as MyDocument)?.type !== 'sticker') {
         messageMessage = message.message;
         totalEntities = message.entities;
 
         ({ messageMessage, totalEntities } = await this.postProcessMuteMessageWithEntities(
-          message, messageMessage, totalEntities));
+          hasToBeMuted, message, messageMessage, totalEntities));
       }
     } else {
       if(message.action._ === 'messageActionPhoneCall') {
@@ -4026,6 +4042,42 @@ export default class ChatBubbles {
           if(webPage._ !== 'webPage') {
             break;
           }
+
+          if (hasToBeMuted) {
+            // no previews for muted content
+
+            // add 'show' button
+            const showPreview = document.createElement('div');
+            showPreview.classList.add('bubble-beside-button', 'show-preview', 'tgico-spoiler');
+            bubbleContainer.prepend(showPreview);
+            bubble.classList.add('with-beside-button');
+            // -- /
+            const showWebPreview = +(bubble.dataset.showWebPreview || 0);
+            if (showWebPreview) {
+              //  :thinking:
+            } else {
+              // mark preview is muted
+              // TODO: anything nice?
+              const quote = document.createElement('div');
+              const strong = document.createElement('strong');
+              const quoteTextDiv = document.createElement('div');
+
+              quote.classList.add('quote');
+              quoteTextDiv.classList.add('quote-text');
+
+              // Can't make this work :'(
+              // setInnerHTML(strong, i18n('WebPagePreviewMuted'));
+              setInnerHTML(strong, 'Web page preview is muted.');
+
+              quoteTextDiv.append(strong);
+              quote.append(quoteTextDiv);
+              messageDiv.insertBefore(quote, timeSpan);
+              // -- /
+
+              break;
+            }
+          }
+
 
           bubble.classList.add('webpage');
 

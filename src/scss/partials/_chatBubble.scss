@@ -479,6 +479,11 @@ $bubble-beside-button-width: 38px;
     html.no-touch body.animation-level-2 & {
       transition: opacity .2s ease-in-out;
     }
+
+    // stack additional buttons
+    & + & {
+      bottom: var(--message-beside-button-size);
+    }
   }
 
   &-view-button {

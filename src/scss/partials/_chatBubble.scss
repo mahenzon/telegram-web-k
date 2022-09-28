@@ -93,7 +93,7 @@ $bubble-beside-button-width: 38px;
 
   &.is-gesturing-reply {
     transform: translateX(0);
-    
+
     &.animating.backwards {
       transition: transform var(--transition-standard-out);
     }
@@ -131,8 +131,8 @@ $bubble-beside-button-width: 38px;
     }
   }
 
-  &.is-highlighted, 
-  &.is-selected, 
+  &.is-highlighted,
+  &.is-selected,
   /* .bubbles.is-selecting */ & {
     &:after {
       position: absolute;
@@ -221,14 +221,14 @@ $bubble-beside-button-width: 38px;
   }
 
   //&.is-highlighted:after, &.is-first-unread:before, &.is-selected:after {
-  &:after, 
+  &:after,
   &:before {
     width: 200%;
     display: block;
   }
 
   &.is-multiple-documents {
-    &:before, 
+    &:before,
     &:after {
       display: none;
     }
@@ -260,7 +260,7 @@ $bubble-beside-button-width: 38px;
     left: 0;
     display: flex;
     margin: 0;
-    
+
     .checkbox-box-border {
       border-color: var(--message-checkbox-border-color);
     }
@@ -288,9 +288,9 @@ $bubble-beside-button-width: 38px;
   }
 
   .bubbles.is-selecting &:not(.is-album) {
-    .audio, 
-    .document, 
-    .attachment, 
+    .audio,
+    .document,
+    .attachment,
     poll-element {
       pointer-events: none !important;
     }
@@ -298,13 +298,13 @@ $bubble-beside-button-width: 38px;
 
   // ! hide context menu for media on android
   .bubbles.is-selecting & {
-    img, 
+    img,
     video,
     a {
       pointer-events: none;
     }
   }
-  
+
   &-content {
     //min-width: 60px;
     min-width: 56px;
@@ -379,7 +379,7 @@ $bubble-beside-button-width: 38px;
   /* &.with-beside-button &-content {
     margin-right: calc(var(--message-beside-button-margin) * -1);
   } */
-  
+
   &.service {
     //padding: 1rem 0;
     //padding: $bubble-margin 0;
@@ -403,7 +403,7 @@ $bubble-beside-button-width: 38px;
     opacity: .99999; // for safari
     pointer-events: none;
 
-    &:before, 
+    &:before,
     &:after {
       display: none;
     }
@@ -530,7 +530,7 @@ $bubble-beside-button-width: 38px;
   &:not(.forwarded):not(.must-have-name) {
     &:not(.is-group-first) {
       .name {
-      // .bubble-content > .name, 
+      // .bubble-content > .name,
       // .document-wrapper > .name {
         display: none;
       }
@@ -555,12 +555,12 @@ $bubble-beside-button-width: 38px;
     opacity: 1;
   } */
 
-  &.photo, 
+  &.photo,
   &.video {
     .bubble-content {
       width: min-content;
     }
-    
+
     .web {
       /* width: max-content; */ // commented 10.02.2020
       /* width: min-content; */
@@ -599,7 +599,7 @@ $bubble-beside-button-width: 38px;
   .preview-resizer {
     display: flex;
   }
-  
+
   img.emoji {
     height: 18px;
     width: 18px;
@@ -610,7 +610,7 @@ $bubble-beside-button-width: 38px;
   .thumbnail {
     position: absolute;
   }
-  
+
   &.emoji-big {
     --emoji-size: 1rem;
     font-size: 0;
@@ -630,7 +630,7 @@ $bubble-beside-button-width: 38px;
         max-height: 64px;
       }
     }
-    
+
     &:not(.sticker) {
       .attachment {
         padding-top: .5rem;
@@ -642,7 +642,7 @@ $bubble-beside-button-width: 38px;
         white-space: pre-wrap;
         word-break: break-word;
         font-size: var(--emoji-size);
-        
+
         span.emoji {
           height: auto;
           width: auto;
@@ -664,14 +664,14 @@ $bubble-beside-button-width: 38px;
         max-width: unquote('min(420px, 100%)');
       }
     }
-    
+
     /* &.sticker .bubble-content {
       max-width: 140px !important;
       max-height: 140px !important;
       user-select: none !important;
     } */
   }
-  
+
   &.just-media {
     .bubble-content {
       // cursor: pointer;
@@ -680,7 +680,7 @@ $bubble-beside-button-width: 38px;
       /* max-width: 300px;
       max-height: 300px; */
     }
-    
+
     img {
       object-fit: contain;
     }
@@ -689,11 +689,11 @@ $bubble-beside-button-width: 38px;
       //background-color: rgba(0, 0, 0, .23);
       background: var(--message-highlightning-color);
     }
-    
+
     /* &.is-message-empty .message {
       display: none;
     }
-    
+
     &.is-message-empty:hover .message {
       display: block;
     } */
@@ -734,7 +734,7 @@ $bubble-beside-button-width: 38px;
       height: var(--round-video-size) !important;
     }
 
-    .media-photo, 
+    .media-photo,
     .media-video {
       border-radius: 50%;
       pointer-events: none;
@@ -746,11 +746,11 @@ $bubble-beside-button-width: 38px;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
   }
-  
+
   &:not(.emoji-big) .attachment {
     font-size: 0;
   }
-  
+
   .attachment {
     max-width: 100%;
     border-radius: inherit;
@@ -758,13 +758,13 @@ $bubble-beside-button-width: 38px;
     user-select: none;
 
     //-webkit-mask-image: -webkit-radial-gradient(circle, white 100%, black 100%); // fix safari overflow
-    
+
     display: flex; // lol
     justify-content: center;
     position: relative;
     cursor: pointer;
-    
-    img, 
+
+    img,
     video {
       max-width: 100%;
     }
@@ -788,7 +788,7 @@ $bubble-beside-button-width: 38px;
       }
     }
 
-    .download, 
+    .download,
     .preloader-container {
       & ~ .video-play {
         display: none;
@@ -819,7 +819,7 @@ $bubble-beside-button-width: 38px;
   .preloader-container {
     z-index: 2;
   }
-  
+
   &:not(.sticker) {
     .attachment {
       max-width: unquote('min(420px, 100%)');
@@ -829,7 +829,7 @@ $bubble-beside-button-width: 38px;
     }
   }
 
-  img:not(.emoji), 
+  img:not(.emoji),
   video {
     /* object-fit: contain; */
     object-fit: cover;
@@ -838,7 +838,7 @@ $bubble-beside-button-width: 38px;
   }
 
   html.is-safari &:not(.round) {
-    img:not(.emoji), 
+    img:not(.emoji),
     video {
       border-radius: inherit;
     }
@@ -888,7 +888,7 @@ $bubble-beside-button-width: 38px;
 
     &.is-selected {
       border-radius: 0;
-      
+
       .album-item-media {
         transform: scale(1);
       }
@@ -903,7 +903,7 @@ $bubble-beside-button-width: 38px;
 
       &:not(.backwards) {
         transition: border-radius var(--transition-standard-in);
-        
+
         .album-item-media {
           transition: transform var(--transition-standard-in), border-radius var(--transition-standard-in);
           transform: scale(.883333);
@@ -929,7 +929,7 @@ $bubble-beside-button-width: 38px;
     justify-content: center;
     align-items: center;
     max-width: 100%;
-    
+
     @include animation-level(0) {
       flex: 1 1 auto;
     }
@@ -961,11 +961,11 @@ $bubble-beside-button-width: 38px;
           align-items: flex-start !important;
           padding: .75rem 1rem .875rem !important;
         }
-  
+
         .center {
           align-self: center;
         }
-  
+
         .empty-bubble-placeholder-title {
           font-weight: var(--font-weight-bold);
           font-size: 1rem !important;
@@ -997,7 +997,7 @@ $bubble-beside-button-width: 38px;
 
       .bubbles.has-groups & {
         pointer-events: none;
-        
+
         .bubble-content-wrapper {
           transform: scale3d(.8, .8, 1) translateX(0);
           //transform: scale(.8) translateX(0);
@@ -1049,7 +1049,7 @@ $bubble-beside-button-width: 38px;
     & + .time {
       display: block;
     }
-    
+
     .preview {
       max-width: unquote('min(420px, 100%)');
       max-height: unquote('min(340px, 100%)');
@@ -1059,7 +1059,7 @@ $bubble-beside-button-width: 38px;
       cursor: pointer;
       position: relative;
       width: max-content;
-      
+
       img, video {
         max-width: 100%;
       }
@@ -1085,7 +1085,7 @@ $bubble-beside-button-width: 38px;
     &.no-text {
       margin-bottom: .75rem;
     }
-    
+
     .title {
       &:not(:first-child) {
         margin-top: 1px;
@@ -1098,15 +1098,15 @@ $bubble-beside-button-width: 38px;
       font-size: var(--messages-secondary-text-size);
       line-height: var(--messages-secondary-line-height);
     }
-    
+
     .webpage-name {
       text-decoration: none;
-      
+
       @include hover() {
         text-decoration: underline;
       }
     }
-    
+
     .text {
       word-break: break-word;
       margin-top: 1px;
@@ -1136,7 +1136,7 @@ $bubble-beside-button-width: 38px;
       }
     }
   }
-  
+
   .reply {
     font-size: var(--messages-secondary-text-size);
   }
@@ -1182,7 +1182,7 @@ $bubble-beside-button-width: 38px;
     min-width: 10rem;
     width: auto;
 
-    
+
 
     &-media {
       top: .125rem;
@@ -1215,7 +1215,7 @@ $bubble-beside-button-width: 38px;
   }
 
   &.just-media {
-    .reply, 
+    .reply,
     .name {
       padding: 10px;
       border-radius: 12px;
@@ -1257,7 +1257,7 @@ $bubble-beside-button-width: 38px;
       }
 
       &-title,
-      &-subtitle, 
+      &-subtitle,
       i {
         color: #fff !important;
       }
@@ -1301,7 +1301,7 @@ $bubble-beside-button-width: 38px;
   }
 
   @include respond-to(handhelds) {
-    .document, 
+    .document,
     .audio {
       --icon-size: 2.25rem;
     }
@@ -1318,7 +1318,7 @@ $bubble-beside-button-width: 38px;
         font-size: 0;
       }
     }
-    
+
     @include respond-to(handhelds) {
       height: 2.375rem;
       --icon-margin: .6875rem;
@@ -1355,7 +1355,7 @@ $bubble-beside-button-width: 38px;
     }
   }
 
-  .message.audio-message, 
+  .message.audio-message,
   .message.voice-message {
     padding: 8px !important;
     //padding: 4px 6px 4px 8px !important;
@@ -1503,7 +1503,7 @@ $bubble-beside-button-width: 38px;
       height: 0px !important;
       visibility: hidden !important;
       float: none;
-  
+
       .inner {
         visibility: hidden !important;
       }
@@ -1542,7 +1542,7 @@ $bubble-beside-button-width: 38px;
         left: -75vw;
       }
 
-      &.is-highlighted, 
+      &.is-highlighted,
       &.is-selected {
         .document-wrapper {
           &:before {
@@ -1564,7 +1564,7 @@ $bubble-beside-button-width: 38px;
         }
 
         body:not(.animation-level-0) & {
-          .document-selection, 
+          .document-selection,
           .document-wrapper:before {
             animation: bubbleSelected 2s linear;
           }
@@ -1577,13 +1577,13 @@ $bubble-beside-button-width: 38px;
         }
 
         body:not(.animation-level-0) & {
-          .document-selection, 
+          .document-selection,
           .document-wrapper:before {
             animation: fade-in-opacity .2s linear forwards;
           }
-  
+
           &.backwards {
-            .document-selection, 
+            .document-selection,
             .document-wrapper:before {
               animation: fade-in-backwards-opacity .2s linear forwards;
             }
@@ -1663,7 +1663,7 @@ $bubble-beside-button-width: 38px;
 
     .document {
       height: 54px !important;
-      
+
       @include respond-to(handhelds) {
         height: 38px !important;
       }
@@ -1702,11 +1702,11 @@ $bubble-beside-button-width: 38px;
   }
 
   .message {
-    // &.document-message, 
-    // &.audio-message, 
-    // &.voice-message, 
-    .audio, 
-    &.poll-message, 
+    // &.document-message,
+    // &.audio-message,
+    // &.voice-message,
+    .audio,
+    &.poll-message,
     &.contact-message {
       .time {
         position: absolute;
@@ -1722,7 +1722,7 @@ $bubble-beside-button-width: 38px;
       overflow: hidden;
     }
   }
-  
+
   &.is-message-empty {
     .message {
       position: absolute;
@@ -1734,7 +1734,7 @@ $bubble-beside-button-width: 38px;
       background-color: var(--message-time-background);
       padding: 0 .3125rem;
       z-index: 2;
-      
+
       .time {
         margin-left: 0;
         display: flex;
@@ -1761,8 +1761,8 @@ $bubble-beside-button-width: 38px;
       bottom: 55px;
     }
 
-    &.sticker, 
-    &.with-replies.round, 
+    &.sticker,
+    &.with-replies.round,
     &.emoji-big {
       .message {
         bottom: 0;
@@ -1799,7 +1799,7 @@ $bubble-beside-button-width: 38px;
     opacity: .6;
     color: inherit;
   }
-  
+
   .time {
     visibility: hidden; // * can't use color transparent here, because in name can be emoji
     font-size: 12px;
@@ -1823,7 +1823,7 @@ $bubble-beside-button-width: 38px;
 
     &-icon {
       pointer-events: none;
-      
+
       &:not(:first-child) {
         margin-left: 2px;
       }
@@ -1833,7 +1833,7 @@ $bubble-beside-button-width: 38px;
       overflow: visible;
       font-size: inherit;
     }
-    
+
     .inner {
       pointer-events: all;
       position: absolute;
@@ -1857,7 +1857,7 @@ $bubble-beside-button-width: 38px;
     float: none;
   }
 
-  .video-time, 
+  .video-time,
   .video-play {
     pointer-events: none;
   }
@@ -1917,17 +1917,17 @@ $bubble-beside-button-width: 38px;
       display: none;
     }
   }
-  
+
   .name {
     user-select: none;
   }
-  
+
   .peer-title {
     cursor: pointer;
   }
-  
+
   .name {
-  // &-content > .name, 
+  // &-content > .name,
   // .document-wrapper > .name {
     padding: .3125rem .625rem 0 .625rem;
     font-weight: var(--font-weight-bold) !important;
@@ -1952,15 +1952,15 @@ $bubble-beside-button-width: 38px;
   /* &:not(.is-group-first) .bubble-content > .name .name {
     display: none;
   } */
-  
+
   &:not(.webpage) {
-    &.photo, 
+    &.photo,
     &.video {
       &:not(.is-reply) .bubble-content > .name {
         //padding-bottom: .2675rem;
         padding-bottom: 6px;
       }
-      
+
       &:not(.is-message-empty) .message {
         //padding-top: .2675rem;
         padding-top: 6px;
@@ -1971,14 +1971,14 @@ $bubble-beside-button-width: 38px;
   &:not(.webpage):not(.is-album):not(.sticker):not(.round):not(.emoji-big) .attachment {
     background-color: #000;
   }
-  
+
   &.hide-name:not(.is-reply):not(.is-message-empty) .message {
     //padding-top: .2675rem;
     padding-top: 6px;
   }
 
   &:not(.sticker):not(.emoji-big):not(.forwarded) {
-    &.hide-name, 
+    &.hide-name,
     &:not(.is-group-first)/* , &.is-out */ {
       .reply {
         margin-top: 6px;
@@ -1989,7 +1989,7 @@ $bubble-beside-button-width: 38px;
   .bubble-tail {
     display: none;
   }
-  
+
   //&.can-have-tail.is-group-last .bubble-content:after {
   &.can-have-tail.is-group-last .bubble-tail {
     position: absolute;
@@ -2006,7 +2006,7 @@ $bubble-beside-button-width: 38px;
     transform: translateY(1px);
   }
 
-  &.photo, 
+  &.photo,
   &.video {
     &.is-message-empty.is-group-last:not(.with-replies) {
       //.bubble-content:after {
@@ -2032,7 +2032,7 @@ $bubble-beside-button-width: 38px;
     border-radius: inherit;
   }
 
-  audio-element, 
+  audio-element,
   poll-element {
     white-space: normal; // * fix due to .message white-space prewrap
   }
@@ -2083,8 +2083,8 @@ $bubble-beside-button-width: 38px;
       border-bottom-right-radius: inherit;
       color: var(--primary-color);
       min-width: 15rem;
-  
-      .tgico-comments, 
+
+      .tgico-comments,
       .tgico-next {
         font-size: 1.5rem;
       }
@@ -2093,7 +2093,7 @@ $bubble-beside-button-width: 38px;
         margin-left: .125rem;
         margin-right: .375rem;
       }
-  
+
       &-text {
         font-weight: var(--font-weight-bold);
         font-size: .9375rem;
@@ -2103,17 +2103,17 @@ $bubble-beside-button-width: 38px;
         color: var(--primary-color);
         line-height: 1.125rem;
       }
-  
+
       &-avatars {
         --margin-right: -.875rem;
         --border-size: 2px;
       }
-  
+
       .tgico-next {
         position: absolute;
         right: .1875rem;
       }
-  
+
       &.is-unread {
         .replies-footer-text {
           &:after {
@@ -2143,7 +2143,7 @@ $bubble-beside-button-width: 38px;
     .reaction {
       --background-color: var(--light-filled-message-primary-color);
 
-      &:not(.is-chosen), 
+      &:not(.is-chosen),
       &.is-chosen.backwards {
         --counter-color: var(--message-primary-color);
 
@@ -2241,7 +2241,7 @@ $bubble-beside-button-width: 38px;
       padding: 0 2rem;
     }
   }
-  
+
   .service-msg {
     color: #fff;
     //background-color: rgba(0, 0, 0, .24);
@@ -2266,7 +2266,7 @@ $bubble-beside-button-width: 38px;
       color: #fff;
     }
 
-    a, 
+    a,
     .peer-title,
     [data-saved-from] {
       &:hover {
@@ -2288,14 +2288,14 @@ $bubble-beside-button-width: 38px;
 
 .bubble.is-in {
   .bubble-content {
-    &, 
+    &,
     .poll-footer-button {
       border-radius: 6px 12px 12px 6px;
     }
   }
-    
+
   &.is-group-first {
-    .bubble-content, 
+    .bubble-content,
     .poll-footer-button {
       border-top-left-radius: 12px;
     }
@@ -2303,7 +2303,7 @@ $bubble-beside-button-width: 38px;
 
   &.is-group-last {
     &.can-have-tail {
-      .bubble-content, 
+      .bubble-content,
       .poll-footer-button {
         border-bottom-left-radius: 0;
       }
@@ -2311,7 +2311,7 @@ $bubble-beside-button-width: 38px;
       .bubble-tail {
         margin-left: -8.4px;
       }
-  
+
       /* .bubble-content:after {
         margin-left: -8.4px;
         background-image: url('assets/img/msg-tail-left.svg');
@@ -2319,7 +2319,7 @@ $bubble-beside-button-width: 38px;
     }
 
     &:not(.can-have-tail) {
-      .bubble-content, 
+      .bubble-content,
       .poll-footer-button {
         border-bottom-left-radius: 12px;
       }
@@ -2327,7 +2327,7 @@ $bubble-beside-button-width: 38px;
   }
 
   &.just-media {
-    .reply, 
+    .reply,
     .name {
       left: calc(100% + 10px);
 
@@ -2336,13 +2336,13 @@ $bubble-beside-button-width: 38px;
       }
     }
   }
-  
-  .quote .webpage-name, 
+
+  .quote .webpage-name,
   .reply-title
   /* , .reply i */ {
     color: var(--primary-color);
   }
-  
+
   .time {
     margin-left: -3px;
     padding-right: 8px;
@@ -2373,8 +2373,8 @@ $bubble-beside-button-width: 38px;
     }
   }
 
-  .audio-subtitle, 
-  .contact-number, 
+  .audio-subtitle,
+  .contact-number,
   .audio-time {
     color: var(--secondary-text-color) !important;
   }
@@ -2387,7 +2387,7 @@ $bubble-beside-button-width: 38px;
     }
   } */
 
-  pre, 
+  pre,
   code {
     color: var(--monospace-text-color);
   }
@@ -2419,7 +2419,7 @@ $bubble-beside-button-width: 38px;
   .bubble-content {
     margin-left: auto;
 
-    &, 
+    &,
     .poll-footer-button {
       border-radius: 12px 6px 6px 12px;
     }
@@ -2443,11 +2443,11 @@ $bubble-beside-button-width: 38px;
         //@include respond-to(no-floating-left-sidebar) {
           body.is-right-column-shown & {
             transform: scale(1) translateX(0);
-            
+
             @include animation-level(2) {
               transition: var(--bubble-transition-in);
             }
-  
+
             &.zoom-fade {
               transform: scale3d(.8, .8, 1) translateX(0);
             }
@@ -2463,17 +2463,17 @@ $bubble-beside-button-width: 38px;
       right: -2.5rem;
     }
   } */
-    
+
   &.is-group-first {
-    .bubble-content, 
+    .bubble-content,
     .poll-footer-button {
       border-top-right-radius: 12px;
     }
   }
-    
+
   &.is-group-last {
     &.can-have-tail {
-      .bubble-content, 
+      .bubble-content,
       .poll-footer-button {
         border-bottom-right-radius: 0;
       }
@@ -2482,7 +2482,7 @@ $bubble-beside-button-width: 38px;
         right: -8.4px;
         transform: translateY(1px) scaleX(-1);
       }
-      
+
       /* .bubble-content:after {
         right: -8.4px;
         background-image: url('assets/img/msg-tail-right.svg');
@@ -2490,7 +2490,7 @@ $bubble-beside-button-width: 38px;
     }
 
     &:not(.can-have-tail) {
-      .bubble-content, 
+      .bubble-content,
       .poll-footer-button {
         border-bottom-right-radius: 12px;
       }
@@ -2498,7 +2498,7 @@ $bubble-beside-button-width: 38px;
   }
 
   &.just-media {
-    .reply, 
+    .reply,
     .name {
       right: calc(100% + 10px);
     }
@@ -2528,7 +2528,7 @@ $bubble-beside-button-width: 38px;
   .quote .webpage-name {
     color: var(--message-out-primary-color);
   }
-  
+
   .time {
     padding-right: 5px;
     margin-left: -4px;
@@ -2538,7 +2538,7 @@ $bubble-beside-button-width: 38px;
       bottom: 4px;
     }
 
-    &:after, 
+    &:after,
     .inner:after {
       font-size: 19px;
       //vertical-align: middle;
@@ -2551,36 +2551,36 @@ $bubble-beside-button-width: 38px;
   /* &.is-message-empty .time:after {
     margin-bottom: 1px;
   } */
-  
+
   &.forwarded {
     .name {
       color: var(--message-out-primary-color);
     }
   }
-  
+
   &.is-read {
-    .time:after, 
+    .time:after,
     .time .inner:after {
       content: $tgico-checks;
     }
   }
-  
+
   &.is-sent {
-    .time:after, 
+    .time:after,
     .time .inner:after {
       content: $tgico-check;
     }
   }
 
   &.is-sending {
-    .time:after, 
+    .time:after,
     .time .inner:after {
       content: $tgico-sending;
     }
   }
 
   &.is-error {
-    .time:after, 
+    .time:after,
     .time .inner:after {
       content: $tgico-sendingerror;
       color: var(--message-error-color);
@@ -2607,12 +2607,12 @@ $bubble-beside-button-width: 38px;
       }
     }
 
-    &-time, 
+    &-time,
     &-subtitle {
       color: var(--message-out-status-color);
     }
 
-    &-toggle, 
+    &-toggle,
     &-download,
     &.corner-download .preloader-container {
       background-color: var(--message-out-primary-color);
@@ -2626,7 +2626,7 @@ $bubble-beside-button-width: 38px;
       rect {
         fill: var(--message-out-primary-color);
       }
-      
+
       .audio-time:after {
         background-color: var(--message-out-primary-color);
       }
@@ -2683,7 +2683,7 @@ $bubble-beside-button-width: 38px;
     }
   }
 
-  .contact-number, 
+  .contact-number,
   .document-size,
   .bubble-call-subtitle {
     color: var(--message-out-status-color);
@@ -2695,7 +2695,7 @@ $bubble-beside-button-width: 38px;
 
   poll-element {
     .poll {
-      &-desc, 
+      &-desc,
       &-votes-count {
         color: var(--message-out-primary-color);
       }
@@ -2716,7 +2716,7 @@ $bubble-beside-button-width: 38px;
         }
       }
 
-      &-footer-button, 
+      &-footer-button,
       &-hint {
         color: var(--message-out-primary-color);
       }
@@ -2749,7 +2749,7 @@ $bubble-beside-button-width: 38px;
     .progress-line {
       --color: var(--message-out-primary-color);
 
-      &:before, 
+      &:before,
       &__loaded {
         background-color: var(--message-out-primary-color);
       }
@@ -2872,7 +2872,7 @@ $bubble-beside-button-width: 38px;
       margin-left: .3125rem;
     }
 
-    &.tgico:before, 
+    &.tgico:before,
     .forward-icon {
       position: absolute;
       right: .125rem;

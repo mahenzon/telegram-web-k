@@ -3578,6 +3578,48 @@ export default class ChatBubbles {
     return { messageMessage, totalEntities };
   }
 
+  // preview helpers
+
+  private messageMediaPhotoPreviewTail(
+    {
+      canHaveTail,
+      withReplies,
+      bubble,
+      message,
+      photo,
+      attachmentDiv,
+      isOut,
+      loadPromises,
+    }: {
+      canHaveTail: boolean,
+      withReplies: boolean,
+      bubble: HTMLElement,
+      message: Message.messageService | Message.message,
+      photo: Photo.photo,
+      attachmentDiv: HTMLDivElement,
+      isOut: boolean,
+      loadPromises: Promise<any>[],
+    },
+  ) {
+    const withTail = !IS_ANDROID && canHaveTail && !withReplies && USE_MEDIA_TAILS;
+    if (withTail) {
+      bubble.classList.add('with-media-tail');
+    }
+    wrapPhoto({
+      photo: photo,
+      message,
+      container: attachmentDiv,
+      withTail,
+      isOut,
+      lazyLoadQueue: this.lazyLoadQueue,
+      middleware: this.getMiddleware(),
+      loadPromises,
+      autoDownloadSize: this.chat.autoDownload.photo,
+    });
+  }
+
+  // -/ preview helpers
+
   // reverse means top
   private async renderMessage(
     message: Message.message | Message.messageService,
@@ -4017,18 +4059,15 @@ export default class ChatBubbles {
             break;
           }
 
-          const withTail = !IS_ANDROID && canHaveTail && !withReplies && USE_MEDIA_TAILS;
-          if(withTail) bubble.classList.add('with-media-tail');
-          wrapPhoto({
-            photo: photo as Photo.photo,
+          this.messageMediaPhotoPreviewTail({
+            canHaveTail,
+            withReplies,
+            bubble,
             message,
-            container: attachmentDiv,
-            withTail,
+            attachmentDiv,
+            photo: photo as Photo.photo,
             isOut,
-            lazyLoadQueue: this.lazyLoadQueue,
-            middleware: this.getMiddleware(),
             loadPromises,
-            autoDownloadSize: this.chat.autoDownload.photo
           });
 
           break;

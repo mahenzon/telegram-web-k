@@ -1466,6 +1466,39 @@ export default class ChatBubbles {
     });
   }
 
+  private async handleShowContentBubbleActionClick(
+    {
+      bubble,
+    }: {
+      bubble: HTMLElement,
+    },
+  ) {
+    const showMessageContent = +bubble.dataset.showMessageContent;
+    const newShowWebPreviewValue = Number(!showMessageContent);
+    bubble.dataset.showMessageContent = newShowWebPreviewValue.toString();
+
+    // // toastNew({langPackKey: 'UnmuteWebPreview'})
+    // const toastMuteToggleText = newShowWebPreviewValue ? 'Show message content' : 'Hide message content';
+    // toast(toastMuteToggleText);
+    const mid = +bubble.dataset.mid;
+    const message = await this.managers.appMessagesManager.getMessageByPeer(this.peerId, mid);
+    const children: HTMLCollection = bubble.getElementsByClassName('bubble-content-wrapper');
+
+    // TODO: how to re-render message??
+    //  like when it's updated (edited)
+    // is this a good solution?
+
+    // remove content
+    Array.from(children).forEach(content => content.remove());
+    // remove classes
+    bubble.classList.remove(...Array.from(bubble.classList));
+
+    const middlewareHelper = this.getMiddleware().create();
+    const middleware = middlewareHelper.get();
+    // render message again
+    await this.renderMessage(message, false, bubble, middleware)
+  }
+
   public onBubblesClick = async(e: Event) => {
     let target = e.target as HTMLElement;
     let bubble: HTMLElement = null;
@@ -1814,6 +1847,9 @@ export default class ChatBubbles {
           [this.peerId]: await this.managers.appMessagesManager.getMidsByMessage(message)
         });
         // appSidebarRight.forwardTab.open([mid]);
+        return;
+      } else if(target.classList.contains('show-preview')) {
+        await this.handleShowContentBubbleActionClick({ bubble });
         return;
       }
 
@@ -3535,12 +3571,11 @@ export default class ChatBubbles {
   }
 
   public async postProcessMuteMessageWithEntities(
+    hasToBeMuted: boolean,
     message: Message.message,
     messageMessage: string,
     totalEntities: MessageEntity[] | undefined,
   ): Promise<{ messageMessage: string, totalEntities: MessageEntity[] }> {
-
-    const hasToBeMuted: boolean = await this.messageContentHasToBeMuted(message);
     if (hasToBeMuted) {
       if (messageMessage) {
         // mute whole message with Spoiler entity
@@ -3563,6 +3598,117 @@ export default class ChatBubbles {
     }
     return { messageMessage, totalEntities };
   }
+
+  // preview helpers
+
+  private messageMediaPhotoPreviewTail(
+    {
+      canHaveTail,
+      withReplies,
+      bubble,
+      message,
+      photo,
+      attachmentDiv,
+      isOut,
+      loadPromises,
+    }: {
+      canHaveTail: boolean,
+      withReplies: boolean,
+      bubble: HTMLElement,
+      message: Message.messageService | Message.message,
+      photo: Photo.photo,
+      attachmentDiv: HTMLDivElement,
+      isOut: boolean,
+      loadPromises: Promise<any>[],
+    },
+  ) {
+    const withTail = !IS_ANDROID && canHaveTail && !withReplies && USE_MEDIA_TAILS;
+    if (withTail) {
+      bubble.classList.add('with-media-tail');
+    }
+    wrapPhoto({
+      photo: photo,
+      message,
+      container: attachmentDiv,
+      withTail,
+      isOut,
+      lazyLoadQueue: this.lazyLoadQueue,
+      middleware: this.getMiddleware(),
+      loadPromises,
+      autoDownloadSize: this.chat.autoDownload.photo,
+    });
+  }
+
+  private renderMessageMediaPhotoPreview(
+    {
+      messageMedia,
+      canHaveTail,
+      canHideNameIfMedia,
+      bubble,
+      albumMustBeRenderedFull,
+      groupedId,
+      albumMids,
+      albumMessages,
+      attachmentDiv,
+      isOut,
+      loadPromises,
+      withReplies,
+      message,
+    }: {
+      messageMedia: MessageMedia.messageMediaPhoto,
+      canHaveTail: boolean,
+      canHideNameIfMedia: boolean,
+      bubble: HTMLElement,
+      albumMustBeRenderedFull: boolean,
+      groupedId: string,
+      albumMids: number[],
+      albumMessages: Message.message[],
+      attachmentDiv: HTMLDivElement,
+      isOut: boolean,
+      loadPromises: Promise<any>[],
+      withReplies: boolean,
+      message: Message.messageService | Message.message,
+    }
+  ) {
+
+    const photo = messageMedia.photo;
+
+    if(canHideNameIfMedia) {
+      bubble.classList.add('hide-name');
+    }
+
+    bubble.classList.add('photo');
+
+    if(albumMustBeRenderedFull && groupedId && albumMids.length !== 1) {
+      bubble.classList.add('is-album', 'is-grouped');
+      wrapAlbum({
+        messages: albumMessages,
+        attachmentDiv,
+        middleware: this.getMiddleware(),
+        isOut,
+        lazyLoadQueue: this.lazyLoadQueue,
+        chat: this.chat,
+        loadPromises,
+        autoDownload: this.chat.autoDownload
+      });
+
+      // !!
+      return;
+    }
+
+    this.messageMediaPhotoPreviewTail({
+      canHaveTail,
+      withReplies,
+      bubble,
+      message,
+      attachmentDiv,
+      photo: photo as Photo.photo,
+      isOut,
+      loadPromises,
+    });
+
+  }
+  // -/ preview helpers
 
   // reverse means top
   private async renderMessage(
@@ -3670,6 +3816,15 @@ export default class ChatBubbles {
       return ret;
     }
 
+    // manual trigger 'show'
+    const showMessageContent = +bubble.dataset.showMessageContent;
+
+    // if message is applicable for MUTE
+    const hasToBeMuted: boolean = (
+      isMessage
+      && await this.messageContentHasToBeMuted(message)
+    );
+
     let messageMedia: MessageMedia = isMessage && message.media;
 
     let messageMessage: string, totalEntities: MessageEntity[];
@@ -3683,14 +3838,22 @@ export default class ChatBubbles {
         // totalEntities = t.entities;
         totalEntities = t.totalEntities;
 
-        ({ messageMessage, totalEntities } = await this.postProcessMuteMessageWithEntities(
-          message, messageMessage, totalEntities));
+        if (showMessageContent) {
+          // nothing?
+        } else {
+          ({ messageMessage, totalEntities } = await this.postProcessMuteMessageWithEntities(
+            hasToBeMuted, message, messageMessage, totalEntities));
+        }
       } else if(((messageMedia as MessageMedia.messageMediaDocument)?.document as MyDocument)?.type !== 'sticker') {
         messageMessage = message.message;
         totalEntities = message.entities;
 
-        ({ messageMessage, totalEntities } = await this.postProcessMuteMessageWithEntities(
-          message, messageMessage, totalEntities));
+        if (showMessageContent) {
+          // nothing?
+        } else {
+          ({ messageMessage, totalEntities } = await this.postProcessMuteMessageWithEntities(
+            hasToBeMuted, message, messageMessage, totalEntities));
+        }
       }
     } else {
       if(message.action._ === 'messageActionPhoneCall') {
@@ -3972,49 +4135,28 @@ export default class ChatBubbles {
 
       /* if(isMessage)  */switch(messageMedia._) {
         case 'messageMediaPhoto': {
-          const photo = messageMedia.photo;
-          // //////this.log('messageMediaPhoto', photo);
 
           if(!messageMessage) {
             canHaveTail = false;
           }
 
-          if(canHideNameIfMedia) {
-            bubble.classList.add('hide-name');
-          }
-
-          bubble.classList.add('photo');
-
-          if(albumMustBeRenderedFull && groupedId && albumMids.length !== 1) {
-            bubble.classList.add('is-album', 'is-grouped');
-            wrapAlbum({
-              messages: albumMessages,
-              attachmentDiv,
-              middleware: this.getMiddleware(),
-              isOut: our,
-              lazyLoadQueue: this.lazyLoadQueue,
-              chat: this.chat,
-              loadPromises,
-              autoDownload: this.chat.autoDownload
-            });
-
-            break;
-          }
-
-          const withTail = !IS_ANDROID && canHaveTail && !withReplies && USE_MEDIA_TAILS;
-          if(withTail) bubble.classList.add('with-media-tail');
-          wrapPhoto({
-            photo: photo as Photo.photo,
-            message,
-            container: attachmentDiv,
-            withTail,
-            isOut,
-            lazyLoadQueue: this.lazyLoadQueue,
-            middleware: this.getMiddleware(),
+          this.renderMessageMediaPhotoPreview({
+            messageMedia,
+            canHaveTail,
+            canHideNameIfMedia,
+            bubble,
+            albumMustBeRenderedFull,
+            groupedId,
+            albumMids,
+            albumMessages,
+            attachmentDiv,
+            isOut: our,
             loadPromises,
-            autoDownloadSize: this.chat.autoDownload.photo
-          });
+            withReplies,
+            message,
+          })
 
+          // !!!
           break;
         }
 
@@ -4026,6 +4168,42 @@ export default class ChatBubbles {
           if(webPage._ !== 'webPage') {
             break;
           }
+
+          if (hasToBeMuted) {
+            // no previews for muted content
+
+            // add 'show' button
+            const showPreview = document.createElement('div');
+            showPreview.classList.add('bubble-beside-button', 'show-preview', 'tgico-spoiler');
+            bubbleContainer.prepend(showPreview);
+            bubble.classList.add('with-beside-button');
+            // -- /
+            const showMessageContent = +(bubble.dataset.showMessageContent || 0);
+            if (showMessageContent) {
+              //  :thinking:
+            } else {
+              // mark preview is muted
+              // TODO: anything nice?
+              const quote = document.createElement('div');
+              const italicText = document.createElement('em');
+              const quoteTextDiv = document.createElement('div');
+
+              quote.classList.add('quote');
+              quoteTextDiv.classList.add('quote-text');
+
+              // Can't make this work :'(
+              // setInnerHTML(strong, i18n('WebPagePreviewMuted'));
+              setInnerHTML(italicText, 'Web page preview is muted.');
+
+              quoteTextDiv.append(italicText);
+              quote.append(quoteTextDiv);
+              messageDiv.insertBefore(quote, timeSpan);
+              // -- /
+
+              break;
+            }
+          }
+
 
           bubble.classList.add('webpage');
 

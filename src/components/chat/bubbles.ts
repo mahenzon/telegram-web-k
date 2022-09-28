@@ -1466,6 +1466,39 @@ export default class ChatBubbles {
     });
   }
 
+  private async handleShowContentBubbleActionClick(
+    {
+      bubble,
+    }: {
+      bubble: HTMLElement,
+    },
+  ) {
+    const showMessageContent = +bubble.dataset.showMessageContent;
+    const newShowWebPreviewValue = Number(!showMessageContent);
+    bubble.dataset.showMessageContent = newShowWebPreviewValue.toString();
+
+    // // toastNew({langPackKey: 'UnmuteWebPreview'})
+    // const toastMuteToggleText = newShowWebPreviewValue ? 'Show message content' : 'Hide message content';
+    // toast(toastMuteToggleText);
+    const mid = +bubble.dataset.mid;
+    const message = await this.managers.appMessagesManager.getMessageByPeer(this.peerId, mid);
+    const children: HTMLCollection = bubble.getElementsByClassName('bubble-content-wrapper');
+
+    // TODO: how to re-render message??
+    //  like when it's updated (edited)
+    // is this a good solution?
+
+    // remove content
+    Array.from(children).forEach(content => content.remove());
+    // remove classes
+    bubble.classList.remove(...Array.from(bubble.classList));
+
+    const middlewareHelper = this.getMiddleware().create();
+    const middleware = middlewareHelper.get();
+    // render message again
+    await this.renderMessage(message, false, bubble, middleware)
+  }
+
   public onBubblesClick = async(e: Event) => {
     let target = e.target as HTMLElement;
     let bubble: HTMLElement = null;
@@ -1816,19 +1849,7 @@ export default class ChatBubbles {
         // appSidebarRight.forwardTab.open([mid]);
         return;
       } else if(target.classList.contains('show-preview')) {
-        const showWebPreview = +bubble.dataset.showWebPreview;
-        console.log('show-preview clicked!', bubble.dataset, showWebPreview);
-        const newShowWebPreviewValue = Number(!showWebPreview);
-        bubble.dataset.showWebPreview = newShowWebPreviewValue.toString();
-        console.log('show-preview updated', bubble.dataset);
-        // toastNew({langPackKey: 'UnmuteWebPreview'})
-
-        toast('Toggle content mute: ' + Boolean(newShowWebPreviewValue));
-        const mid = +bubble.dataset.mid;
-        // const message = await this.managers.appMessagesManager.getMessageByPeer(this.peerId, mid);
-
-        // TODO: HOW TO RERENDER BUBBLE PREVIEW??
-        // await this.managers.appMessagesManager.updateMessage(this.peerId, mid);
+        await this.handleShowContentBubbleActionClick({ bubble });
         return;
       }
 
@@ -3795,7 +3816,14 @@ export default class ChatBubbles {
       return ret;
     }
 
-    const hasToBeMuted: boolean = isMessage && await this.messageContentHasToBeMuted(message);
+    // manual trigger 'show'
+    const showMessageContent = +bubble.dataset.showMessageContent;
+
+    // if message is applicable for MUTE
+    const hasToBeMuted: boolean = (
+      isMessage
+      && await this.messageContentHasToBeMuted(message)
+    );
 
     let messageMedia: MessageMedia = isMessage && message.media;
 
@@ -3810,14 +3838,22 @@ export default class ChatBubbles {
         // totalEntities = t.entities;
         totalEntities = t.totalEntities;
 
-        ({ messageMessage, totalEntities } = await this.postProcessMuteMessageWithEntities(
-          hasToBeMuted, message, messageMessage, totalEntities));
+        if (showMessageContent) {
+          // nothing?
+        } else {
+          ({ messageMessage, totalEntities } = await this.postProcessMuteMessageWithEntities(
+            hasToBeMuted, message, messageMessage, totalEntities));
+        }
       } else if(((messageMedia as MessageMedia.messageMediaDocument)?.document as MyDocument)?.type !== 'sticker') {
         messageMessage = message.message;
         totalEntities = message.entities;
 
-        ({ messageMessage, totalEntities } = await this.postProcessMuteMessageWithEntities(
-          hasToBeMuted, message, messageMessage, totalEntities));
+        if (showMessageContent) {
+          // nothing?
+        } else {
+          ({ messageMessage, totalEntities } = await this.postProcessMuteMessageWithEntities(
+            hasToBeMuted, message, messageMessage, totalEntities));
+        }
       }
     } else {
       if(message.action._ === 'messageActionPhoneCall') {
@@ -4142,14 +4178,14 @@ export default class ChatBubbles {
             bubbleContainer.prepend(showPreview);
             bubble.classList.add('with-beside-button');
             // -- /
-            const showWebPreview = +(bubble.dataset.showWebPreview || 0);
-            if (showWebPreview) {
+            const showMessageContent = +(bubble.dataset.showMessageContent || 0);
+            if (showMessageContent) {
               //  :thinking:
             } else {
               // mark preview is muted
               // TODO: anything nice?
               const quote = document.createElement('div');
-              const strong = document.createElement('strong');
+              const italicText = document.createElement('em');
               const quoteTextDiv = document.createElement('div');
 
               quote.classList.add('quote');
@@ -4157,9 +4193,9 @@ export default class ChatBubbles {
 
               // Can't make this work :'(
               // setInnerHTML(strong, i18n('WebPagePreviewMuted'));
-              setInnerHTML(strong, 'Web page preview is muted.');
+              setInnerHTML(italicText, 'Web page preview is muted.');
 
-              quoteTextDiv.append(strong);
+              quoteTextDiv.append(italicText);
               quote.append(quoteTextDiv);
               messageDiv.insertBefore(quote, timeSpan);
               // -- /

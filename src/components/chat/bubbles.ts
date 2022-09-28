@@ -3618,6 +3618,75 @@ export default class ChatBubbles {
     });
   }
 
+  private renderMessageMediaPhotoPreview(
+    {
+      messageMedia,
+      canHaveTail,
+      canHideNameIfMedia,
+      bubble,
+      albumMustBeRenderedFull,
+      groupedId,
+      albumMids,
+      albumMessages,
+      attachmentDiv,
+      isOut,
+      loadPromises,
+      withReplies,
+      message,
+    }: {
+      messageMedia: MessageMedia.messageMediaPhoto,
+      canHaveTail: boolean,
+      canHideNameIfMedia: boolean,
+      bubble: HTMLElement,
+      albumMustBeRenderedFull: boolean,
+      groupedId: string,
+      albumMids: number[],
+      albumMessages: Message.message[],
+      attachmentDiv: HTMLDivElement,
+      isOut: boolean,
+      loadPromises: Promise<any>[],
+      withReplies: boolean,
+      message: Message.messageService | Message.message,
+    }
+  ) {
+
+    const photo = messageMedia.photo;
+
+    if(canHideNameIfMedia) {
+      bubble.classList.add('hide-name');
+    }
+
+    bubble.classList.add('photo');
+
+    if(albumMustBeRenderedFull && groupedId && albumMids.length !== 1) {
+      bubble.classList.add('is-album', 'is-grouped');
+      wrapAlbum({
+        messages: albumMessages,
+        attachmentDiv,
+        middleware: this.getMiddleware(),
+        isOut,
+        lazyLoadQueue: this.lazyLoadQueue,
+        chat: this.chat,
+        loadPromises,
+        autoDownload: this.chat.autoDownload
+      });
+
+      // !!
+      return;
+    }
+
+    this.messageMediaPhotoPreviewTail({
+      canHaveTail,
+      withReplies,
+      bubble,
+      message,
+      attachmentDiv,
+      photo: photo as Photo.photo,
+      isOut,
+      loadPromises,
+    });
+
+  }
   // -/ preview helpers
 
   // reverse means top
@@ -4030,46 +4099,28 @@ export default class ChatBubbles {
 
       /* if(isMessage)  */switch(messageMedia._) {
         case 'messageMediaPhoto': {
-          const photo = messageMedia.photo;
-          // //////this.log('messageMediaPhoto', photo);
 
           if(!messageMessage) {
             canHaveTail = false;
           }
 
-          if(canHideNameIfMedia) {
-            bubble.classList.add('hide-name');
-          }
-
-          bubble.classList.add('photo');
-
-          if(albumMustBeRenderedFull && groupedId && albumMids.length !== 1) {
-            bubble.classList.add('is-album', 'is-grouped');
-            wrapAlbum({
-              messages: albumMessages,
-              attachmentDiv,
-              middleware: this.getMiddleware(),
-              isOut: our,
-              lazyLoadQueue: this.lazyLoadQueue,
-              chat: this.chat,
-              loadPromises,
-              autoDownload: this.chat.autoDownload
-            });
-
-            break;
-          }
-
-          this.messageMediaPhotoPreviewTail({
+          this.renderMessageMediaPhotoPreview({
+            messageMedia,
             canHaveTail,
-            withReplies,
+            canHideNameIfMedia,
             bubble,
-            message,
+            albumMustBeRenderedFull,
+            groupedId,
+            albumMids,
+            albumMessages,
             attachmentDiv,
-            photo: photo as Photo.photo,
-            isOut,
+            isOut: our,
             loadPromises,
-          });
+            withReplies,
+            message,
+          })
 
+          // !!!
           break;
         }
 

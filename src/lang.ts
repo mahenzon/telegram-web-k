@@ -2,7 +2,9 @@ const lang = {
   // mute
   'MuteContent.WebPagePreview': 'Web page preview is muted.',
   'MuteContent.UnmuteWebPreview': 'Web page mute trigger %s',
-  'MuteContent.HideUserFull': 'Hide ALL messages',
+  'MuteContent.HidePeerMessagesFull': 'Hide ALL messages',
+  // 'ChatList.Context.ConfigureMute': 'Configure Mute',
+  // 'Notifications.HideForever': 'Hide ',
   // -mute
   'Animations': 'Animations',
   'AttachAlbum': 'Album',

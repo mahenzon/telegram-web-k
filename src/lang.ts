@@ -1,4 +1,9 @@
 const lang = {
+  // mute
+  'MuteContent.WebPagePreview': 'Web page preview is muted.',
+  'MuteContent.UnmuteWebPreview': 'Web page mute trigger %s',
+  'MuteContent.HideUserFull': 'Hide ALL messages',
+  // -mute
   'Animations': 'Animations',
   'AttachAlbum': 'Album',
   'Appearance.Color.Hex': 'HEX',

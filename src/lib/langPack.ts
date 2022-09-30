@@ -7,6 +7,7 @@
 import type lang from '../lang';
 import type langSign from '../langSign';
 import type {State} from '../config/state';
+import localLang from '../lang'
 import DEBUG, {MOUNT_CLASS_TO} from '../config/debug';
 import {HelpCountriesList, HelpCountry, LangPackDifference, LangPackString} from '../layer';
 import stateStorage from './stateStorage';
@@ -64,7 +65,7 @@ export const langPack: {[actionType: string]: LangPackKey} = {
   'messageActionGroupCall.ended_by': 'Chat.Service.VoiceChatFinished',
   'messageActionGroupCall.ended_byYou': 'Chat.Service.VoiceChatFinishedYou',
 
-  'messageActionBotAllowed': 'Chat.Service.BotPermissionAllowed'
+  'messageActionBotAllowed': 'Chat.Service.BotPermissionAllowed',
 };
 
 export type LangPackKey = /* string |  */keyof typeof lang | keyof typeof langSign;
@@ -325,6 +326,19 @@ namespace I18n {
         instance.update();
       }
     });
+
+    // apply local langpack on top
+    Object.entries(localLang).forEach(([stringKey, stringValue]) => {
+      if (!strings.get(stringKey as LangPackKey)) {
+        // apply only unset lang strings
+        const langValue: LangPackString = {
+          _: "langPackString",
+          key: stringKey,
+          value: stringValue as string,
+        }
+        strings.set(stringKey as LangPackKey, langValue);
+      }
+    })
   }
 
   function pushNextArgument(out: ReturnType<typeof superFormatter>, args: FormatterArguments, indexHolder: {i: number}) {

@@ -1,5 +1,5 @@
-## Telegram Web K
-Based on Webogram, patched and improved. Available for everyone here: https://web.telegram.org/k/
+## Telegram Web K with mutes
+Based on Webogram, patched and improved. Available for everyone here: https://mahenzon.github.io/telegram-web-k/
 
 
 ### Developing

@@ -10,13 +10,25 @@
  */
 
 import tsNow from '../../helpers/tsNow';
-import {InputNotifyPeer, InputPeerNotifySettings, NotifyPeer, PeerNotifySettings, Update} from '../../layer';
-import {MUTE_UNTIL} from '../mtproto/mtproto_config';
+import {
+  InputNotifyPeer,
+  InputPeerNotifySettings,
+  NotificationSound,
+  NotifyPeer,
+  PeerNotifySettings,
+  Update
+} from '../../layer';
+import { MUTE_UNTIL } from '../mtproto/mtproto_config';
 import throttle from '../../helpers/schedulers/throttle';
 import convertInputKeyToKey from '../../helpers/string/convertInputKeyToKey';
 import {AppManager} from './manager';
 import ctx from '../../environment/ctx';
 import assumeType from '../../helpers/assumeType';
+
+// mute
+const MUTE_HIDE_MESSAGES_TITLE = 'HIDE_MESSAGES';
+const MUTE_HIDE_MESSAGES_DATA = 'hide-all-messages';
+// -/mute
 
 type ImSadAboutIt = Promise<PeerNotifySettings> | PeerNotifySettings;
 export class AppNotificationsManager extends AppManager {
@@ -144,6 +156,65 @@ export class AppNotificationsManager extends AppManager {
     .then((value) => {
       this.notifyContactsSignUp = Promise.resolve(!silent);
     });
+  }
+
+  public checkSoundStateIsMute(sound?: { title?: string | undefined }): boolean {
+    return (sound
+      && sound.title === MUTE_HIDE_MESSAGES_TITLE
+    )
+  }
+
+  public async isMuteLevelHideMessages(peerId: PeerId): Promise<boolean> {
+    const peerNotifySettings = await this.getNotifySettings({
+      _: 'inputNotifyPeer',
+      peer: await this.appPeersManager.getInputPeerById(peerId),
+    });
+    // idk why it sometimes comes not as api describes it
+    if (
+      this.checkSoundStateIsMute(peerNotifySettings.other_sound as any)
+      || this.checkSoundStateIsMute((peerNotifySettings as any).sound as any)
+    ) {
+      return true;
+    }
+    //
+    return false;
+  }
+
+  public mutePeerHideMessages(peerId: PeerId) {
+    const hideMessagesSound: NotificationSound.notificationSoundLocal = {
+      _: 'notificationSoundLocal',
+      title: MUTE_HIDE_MESSAGES_TITLE,
+      data: MUTE_HIDE_MESSAGES_DATA,
+    }
+    const settings: InputPeerNotifySettings = {
+      _: 'inputPeerNotifySettings',
+      sound: hideMessagesSound,
+      mute_until: MUTE_UNTIL,
+    }
+
+    return this.updateNotifySettings({
+      _: 'inputNotifyPeer',
+      peer: this.appPeersManager.getInputPeerById(peerId)
+    }, settings);
+  }
+
+  public togglePeerMuteHideMessages(peerId: PeerId, mute: boolean) {
+    // if (mute === undefined) {
+    //   mute = this.appNotificationsManager.isMuteLevelHideMessages()
+    // }
+    if (mute) {
+      return this.mutePeerHideMessages(peerId);
+    }
+    // return this.togglePeerMute(peerId, true);
+    // return this.mutePeer(peerId, MUTE_UNTIL);
+    const settings: InputPeerNotifySettings = {
+      _: 'inputPeerNotifySettings'
+    };
+
+    return this.updateNotifySettings({
+      _: 'inputNotifyPeer',
+      peer: this.appPeersManager.getInputPeerById(peerId)
+    }, settings);
   }
 
   private checkMuteUntil = () => {

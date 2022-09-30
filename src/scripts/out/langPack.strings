@@ -1,3 +1,6 @@
+"MuteContent.WebPagePreview" = 'Web page preview is muted.';
+"MuteContent.UnmuteWebPreview" = "Web page mute trigger %s";
+"MuteContent.HidePeerMessagesFull" = "Hide ALL messages";
 "Animations" = "Animations";
 "AttachAlbum" = "Album";
 "Appearance.Color.Hex" = "HEX";

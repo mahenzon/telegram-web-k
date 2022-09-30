@@ -45,6 +45,7 @@ export default class PeerProfile {
   private username: Row;
   private phone: Row;
   private notifications: Row;
+  private hideMessages: Row;
   private location: Row;
   private link: Row;
 
@@ -68,6 +69,27 @@ export default class PeerProfile {
     if(!listenerSetter) {
       this.listenerSetter = new ListenerSetter();
     }
+  }
+
+  private setHideMessagesToggle() {
+
+    this.hideMessages = new Row({
+      checkboxField: new CheckboxField({ toggle: true }),
+      titleLangKey: 'MuteContent.HidePeerMessagesFull',
+      icon: 'spoiler',
+      listenerSetter: this.listenerSetter,
+    })
+
+    this.listenerSetter.add(this.hideMessages.checkboxField.input)('change', (e) => {
+      if(!e.isTrusted) {
+        return;
+      }
+
+      let checked = this.hideMessages.checkboxField.checked;
+      this.managers.appNotificationsManager.togglePeerMuteHideMessages(this.peerId, checked);
+    });
+    this.section.content.append(this.hideMessages.container);
+
   }
 
   public init() {
@@ -190,6 +212,8 @@ export default class PeerProfile {
       this.section.content.append(this.notifications.container);
     }
 
+    this.setHideMessagesToggle();
+
     this.element.append(this.section.container);
 
     if(IS_PARALLAX_SUPPORTED) {
@@ -276,6 +300,11 @@ export default class PeerProfile {
       this.notifications.checkboxField.checked = true;
     }
 
+    if(this.hideMessages) {
+      this.hideMessages.container.style.display = '';
+      this.hideMessages.checkboxField.checked = true;
+    }
+
     this.clearSetMoreDetailsTimeout();
   }
 
@@ -353,6 +382,23 @@ export default class PeerProfile {
     }
   }
 
+  private async fillMuteAllMessages() {
+    const hideMessagesRow = this.hideMessages;
+    if(!hideMessagesRow) {
+      return;
+    }
+
+    if(this.canBeDetailed()) {
+      const isMuted = await this.managers.appNotificationsManager.isMuteLevelHideMessages(this.peerId);
+      hideMessagesRow.checkboxField.checked = isMuted;
+    } else {
+      // hide
+      fastRaf(() => {
+        hideMessagesRow.container.style.display = 'none';
+      });
+    }
+  }
+
   private async fillRows() {
     const peerId = this.peerId;
 
@@ -360,6 +406,7 @@ export default class PeerProfile {
       this.fillUsername(),
       this.fillUserPhone(),
       this.fillNotifications(),
+      this.fillMuteAllMessages(),
       this.setMoreDetails(),
       (async() => {
         const [element/* , icons */] = await Promise.all([

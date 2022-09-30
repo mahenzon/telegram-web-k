@@ -30,8 +30,24 @@ import LazyLoadQueue from '../lazyLoadQueue';
 import ListenerSetter from '../../helpers/listenerSetter';
 import PollElement from '../poll';
 import AudioElement from '../audio';
-import {ChatInvite, Document, Message, MessageEntity,  MessageMedia,  MessageReplyHeader, Photo, PhotoSize, ReactionCount, ReplyMarkup, SponsoredMessage, Update, User, WebPage} from '../../layer';
-import {BOT_START_PARAM, NULL_PEER_ID, REPLIES_PEER_ID} from '../../lib/mtproto/mtproto_config';
+import {
+  ChatInvite,
+  Document,
+  Message,
+  MessageEntity,
+  MessageMedia,
+  MessageReplyHeader,
+  PeerNotifySettings,
+  Photo,
+  PhotoSize,
+  ReactionCount,
+  ReplyMarkup,
+  SponsoredMessage,
+  Update,
+  User,
+  WebPage
+} from '../../layer';
+import { BOT_START_PARAM, NULL_PEER_ID, REPLIES_PEER_ID } from '../../lib/mtproto/mtproto_config';
 import {FocusDirection, ScrollStartCallbackDimensions} from '../../helpers/fastSmoothScroll';
 import useHeavyAnimationCheck, {getHeavyAnimationPromise, dispatchHeavyAnimationEvent, interruptHeavyAnimation} from '../../hooks/useHeavyAnimationCheck';
 import {fastRaf, fastRafPromise} from '../../helpers/schedulers';
@@ -1477,9 +1493,6 @@ export default class ChatBubbles {
     const newShowWebPreviewValue = Number(!showMessageContent);
     bubble.dataset.showMessageContent = newShowWebPreviewValue.toString();
 
-    // // toastNew({langPackKey: 'UnmuteWebPreview'})
-    // const toastMuteToggleText = newShowWebPreviewValue ? 'Show message content' : 'Hide message content';
-    // toast(toastMuteToggleText);
     const mid = +bubble.dataset.mid;
     const message = await this.managers.appMessagesManager.getMessageByPeer(this.peerId, mid);
     const children: HTMLCollection = bubble.getElementsByClassName('bubble-content-wrapper');
@@ -3491,6 +3504,44 @@ export default class ChatBubbles {
     return result;
   }
 
+  private async messageRenderHasToBeSkipped(
+    message: Message.message,
+  ): Promise<boolean> {
+    // don't hide my messages
+    // TODO: reusable method?
+    const myId = appImManager.myId;
+
+    if (message.fromId === myId) {
+      return false;
+    }
+    let peerId = message.fromId;
+
+    try {
+      if (await this.managers.appNotificationsManager.isMuteLevelHideMessages(peerId)) {
+        return true;
+      }
+      if (message.fwdFromId) {
+        peerId = message.fwdFromId;
+
+        if (await this.managers.appNotificationsManager.isMuteLevelHideMessages(peerId)) {
+          return true;
+        }
+      }
+    } catch (e) {
+      if ((e as ApiError).type === 'CHANNEL_PRIVATE') {
+        // is there a better way to check if channel is private?
+        // hide or not hide?
+        // return true;
+        if (peerId.isUser()) {
+          return true;
+        }
+      }
+    }
+
+    // ?
+    return false;
+  }
+
   private async messageContentHasToBeMuted(
     message: Message.message,
   ): Promise<boolean> {
@@ -3728,6 +3779,12 @@ export default class ChatBubbles {
     // await pause(1000);
 
     const isMessage = message._ === 'message';
+    if (isMessage) {
+      if (await this.messageRenderHasToBeSkipped(message)) {
+        bubble.remove();
+        return;
+      }
+    }
     const groupedId = isMessage && message.grouped_id;
     let albumMids: number[], reactionsMessage: Message.message;
     const albumMessages = groupedId ? await this.managers.appMessagesManager.getMessagesByAlbum(groupedId) : undefined;
@@ -4191,9 +4248,7 @@ export default class ChatBubbles {
               quote.classList.add('quote');
               quoteTextDiv.classList.add('quote-text');
 
-              // Can't make this work :'(
-              // setInnerHTML(strong, i18n('WebPagePreviewMuted'));
-              setInnerHTML(italicText, 'Web page preview is muted.');
+              setInnerHTML(italicText, i18n('MuteContent.WebPagePreview'));
 
               quoteTextDiv.append(italicText);
               quote.append(quoteTextDiv);

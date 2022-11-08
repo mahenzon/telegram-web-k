@@ -9,7 +9,7 @@ import htmlToDocumentFragment from '../../helpers/dom/htmlToDocumentFragment';
 import {getRestrictionReason} from '../../helpers/restrictions';
 import escapeRegExp from '../../helpers/string/escapeRegExp';
 import limitSymbols from '../../helpers/string/limitSymbols';
-import {Message, DocumentAttribute} from '../../layer';
+import {Message, DocumentAttribute, DraftMessage} from '../../layer';
 import {MyDocument} from '../../lib/appManagers/appDocsManager';
 import {MyDraftMessage} from '../../lib/appManagers/appDraftsManager';
 import {MyMessage} from '../../lib/appManagers/appMessagesManager';
@@ -52,7 +52,7 @@ export default async function wrapMessageForReply(message: MyMessage | MyDraftMe
 
   const isRestricted = isMessageRestricted(message as any);
 
-  let entities = (message as Message.message).totalEntities;
+  let entities = (message as Message.message).totalEntities ?? (message as DraftMessage.draftMessage).entities;
   if((message as Message.message).media && !isRestricted) {
     assumeType<Message.message>(message);
     let usingFullAlbum = true;
@@ -159,7 +159,12 @@ export default async function wrapMessageForReply(message: MyMessage | MyDraftMe
         }
 
         case 'messageMediaInvoice': {
-          addPart(undefined, plain ? media.title : wrapEmojiText(media.title));
+          if(media.extended_media?._ === 'messageExtendedMediaPreview') {
+            addPart(undefined, plain ? media.description : wrapEmojiText(media.description));
+          } else {
+            addPart(undefined, plain ? media.title : wrapEmojiText(media.title));
+          }
+
           break;
         }
 

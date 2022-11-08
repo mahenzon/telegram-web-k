@@ -800,9 +800,9 @@ export class AppDialogsManager {
   };
 
   private async setFilterUnreadCount(filterId: number) {
-    if(filterId === FOLDER_ID_ALL) {
-      return;
-    }
+    // if(filterId === FOLDER_ID_ALL) {
+    //   return;
+    // }
 
     const unreadSpan = this.filtersRendered[filterId]?.unread;
     if(!unreadSpan) {
@@ -811,7 +811,8 @@ export class AppDialogsManager {
 
     const {unreadUnmutedCount, unreadCount} = await this.managers.dialogsStorage.getFolderUnreadCount(filterId);
     unreadSpan.classList.toggle('badge-gray', !unreadUnmutedCount);
-    unreadSpan.innerText = unreadCount ? '' + unreadCount : '';
+    const count = filterId === FOLDER_ID_ALL ? unreadUnmutedCount : unreadCount;
+    unreadSpan.innerText = count ? '' + count : '';
   }
 
   private setFiltersUnreadCount() {

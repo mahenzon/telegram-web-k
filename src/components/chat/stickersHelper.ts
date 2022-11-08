@@ -4,11 +4,11 @@
  * https://github.com/morethanwords/tweb/blob/master/LICENSE
  */
 
+import type Chat from './chat';
 import ListenerSetter from '../../helpers/listenerSetter';
 import mediaSizes from '../../helpers/mediaSizes';
 import preloadAnimatedEmojiSticker from '../../helpers/preloadAnimatedEmojiSticker';
 import {MyDocument} from '../../lib/appManagers/appDocsManager';
-import {CHAT_ANIMATION_GROUP} from '../../lib/appManagers/appImManager';
 import {AppManagers} from '../../lib/appManagers/managers';
 import rootScope from '../../lib/rootScope';
 import {EmoticonsDropdown} from '../emoticonsDropdown';
@@ -29,6 +29,7 @@ export default class StickersHelper extends AutocompleteHelper {
   constructor(
     appendTo: HTMLElement,
     controller: AutocompleteHelperController,
+    private chat: Chat,
     private managers: AppManagers
   ) {
     super({
@@ -107,7 +108,7 @@ export default class StickersHelper extends AutocompleteHelper {
 
         if(!this.onChangeScreen) {
           this.onChangeScreen = () => {
-            const width = (this.list.childElementCount * mediaSizes.active.esgSticker.width) + (this.list.childElementCount - 1 * 1);
+            const width = (this.list.childElementCount * mediaSizes.active.popupSticker.width) + (this.list.childElementCount - 1 * 1);
             this.list.style.width = width + 'px';
           };
           mediaSizes.addEventListener('changeScreen', this.onChangeScreen);
@@ -132,6 +133,6 @@ export default class StickersHelper extends AutocompleteHelper {
 
     this.scrollable = new Scrollable(this.container);
     this.lazyLoadQueue = new LazyLoadQueue();
-    this.superStickerRenderer = new SuperStickerRenderer(this.lazyLoadQueue, CHAT_ANIMATION_GROUP, this.managers);
+    this.superStickerRenderer = new SuperStickerRenderer(this.lazyLoadQueue, this.chat.animationGroup, this.managers);
   }
 }

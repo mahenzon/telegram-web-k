@@ -69,7 +69,7 @@ import uiNotificationsManager from './uiNotificationsManager';
 import appMediaPlaybackController from '../../components/appMediaPlaybackController';
 import {PHONE_NUMBER_REG_EXP} from '../richTextProcessor';
 import wrapEmojiText from '../richTextProcessor/wrapEmojiText';
-import wrapRichText from '../richTextProcessor/wrapRichText';
+import wrapRichText, {CustomEmojiRendererElement, renderEmojis} from '../richTextProcessor/wrapRichText';
 import wrapUrl from '../richTextProcessor/wrapUrl';
 import generateMessageId from './utils/messageId/generateMessageId';
 import getUserStatusString from '../../components/wrappers/getUserStatusString';
@@ -91,8 +91,10 @@ import paymentsWrapCurrencyAmount from '../../helpers/paymentsWrapCurrencyAmount
 import findUpClassName from '../../helpers/dom/findUpClassName';
 import {CLICK_EVENT_NAME} from '../../helpers/dom/clickEvent';
 import PopupPayment from '../../components/popups/payment';
-
-export const CHAT_ANIMATION_GROUP: AnimationItemGroup = 'chat';
+import wrapPeerTitle from '../../components/wrappers/peerTitle';
+import NBSP from '../../helpers/string/nbsp';
+import {makeMediaSize, MediaSize} from '../../helpers/mediaSize';
+import {MiddleEllipsisElement} from '../../components/middleEllipsis';
 
 export type ChatSavedPosition = {
   mids: number[],
@@ -144,6 +146,7 @@ export class AppImManager extends EventListenerBase<{
   public managers: AppManagers;
 
   public cacheStorage = new CacheStorageController('cachedFiles');
+  public customEmojiSize: MediaSize;
 
   get myId() {
     return rootScope.myId;
@@ -214,10 +217,10 @@ export class AppImManager extends EventListenerBase<{
 
     useHeavyAnimationCheck(() => {
       animationIntersector.setOnlyOnePlayableGroup('lock');
-      animationIntersector.checkAnimations(true);
+      animationIntersector.checkAnimations2(true);
     }, () => {
       animationIntersector.setOnlyOnePlayableGroup();
-      animationIntersector.checkAnimations(false);
+      animationIntersector.checkAnimations2(false);
     });
 
     if(IS_FIREFOX && apiManagerProxy.oldVersion && compareVersion(apiManagerProxy.oldVersion, '1.4.3') === -1) {
@@ -470,11 +473,11 @@ export class AppImManager extends EventListenerBase<{
         popup.show();
       });
 
-      callsController.addEventListener('incompatible', (userId) => {
+      callsController.addEventListener('incompatible', async(userId) => {
         toastNew({
           langPackKey: 'VoipPeerIncompatible',
           langPackArguments: [
-            new PeerTitle({peerId: userId.toPeerId()}).element
+            await wrapPeerTitle({peerId: userId.toPeerId()})
           ]
         });
       });
@@ -793,6 +796,7 @@ export class AppImManager extends EventListenerBase<{
     const IGNORE_KEYS = new Set(['PageUp', 'PageDown', 'Meta', 'Control']);
     const onKeyDown = (e: KeyboardEvent) => {
       const key = e.key;
+      const isSelectionCollapsed = document.getSelection().isCollapsed;
       if(overlayCounter.isOverlayActive || IGNORE_KEYS.has(key)) return;
 
       const target = e.target as HTMLElement;
@@ -803,7 +807,9 @@ export class AppImManager extends EventListenerBase<{
 
       const chat = this.chat;
 
-      if(e.code === 'KeyC' && (e.ctrlKey || e.metaKey) && target.tagName !== 'INPUT') {
+      if((key.startsWith('Arrow') || (e.shiftKey && key === 'Shift')) && !isSelectionCollapsed) {
+        return;
+      } else if(e.code === 'KeyC' && (e.ctrlKey || e.metaKey) && target.tagName !== 'INPUT') {
         return;
       } else if(e.altKey && (key === 'ArrowUp' || key === 'ArrowDown')) {
         cancelEvent(e);
@@ -831,7 +837,7 @@ export class AppImManager extends EventListenerBase<{
         chat?.input?.messageInput &&
         e.target !== chat.input.messageInput &&
         target.tagName !== 'INPUT' &&
-        !target.hasAttribute('contenteditable') &&
+        !target.isContentEditable &&
         !IS_TOUCH_SUPPORTED &&
         (!mediaSizes.isMobile || this.tabId === 1) &&
         !chat.selection.isSelecting &&
@@ -1121,7 +1127,7 @@ export class AppImManager extends EventListenerBase<{
    * Opens thread when peerId of discussion group is known
    */
   public openThread(peerId: PeerId, lastMsgId: number, threadId: number) {
-    return this.managers.appMessagesManager.wrapSingleMessage(peerId, threadId).then((message) => {
+    return this.managers.appMessagesManager.reloadMessages(peerId, threadId).then((message) => {
       // const message: Message = this.managers.appMessagesManager.getMessageByPeer(peerId, threadId);
       if(!message) {
         lastMsgId = undefined;
@@ -1155,13 +1161,15 @@ export class AppImManager extends EventListenerBase<{
 
     const userFull = await this.managers.appProfileManager.getProfile(userId);
     if(userFull.pFlags.phone_calls_private) {
-      confirmationPopup({
-        descriptionLangKey: 'Call.PrivacyErrorMessage',
-        descriptionLangArgs: [new PeerTitle({peerId: userId.toPeerId()}).element],
-        button: {
-          langKey: 'OK',
-          isCancel: true
-        }
+      wrapPeerTitle({peerId: userId.toPeerId()}).then((element) => {
+        return confirmationPopup({
+          descriptionLangKey: 'Call.PrivacyErrorMessage',
+          descriptionLangArgs: [element],
+          button: {
+            langKey: 'OK',
+            isCancel: true
+          }
+        });
       });
 
       return;
@@ -1181,16 +1189,18 @@ export class AppImManager extends EventListenerBase<{
   private async discardCallConfirmation(toPeerId: PeerId) {
     const currentCall = callsController.currentCall;
     if(currentCall) {
-      await confirmationPopup({
-        titleLangKey: 'Call.Confirm.Discard.Call.Header',
-        descriptionLangKey: toPeerId.isUser() ? 'Call.Confirm.Discard.Call.ToCall.Text' : 'Call.Confirm.Discard.Call.ToVoice.Text',
-        descriptionLangArgs: [
-          new PeerTitle({peerId: currentCall.interlocutorUserId.toPeerId(false)}).element,
-          new PeerTitle({peerId: toPeerId}).element
-        ],
-        button: {
-          langKey: 'OK'
-        }
+      await Promise.all([
+        wrapPeerTitle({peerId: currentCall.interlocutorUserId.toPeerId(false)}),
+        wrapPeerTitle({peerId: toPeerId})
+      ]).then(([title1, title2]) => {
+        return confirmationPopup({
+          titleLangKey: 'Call.Confirm.Discard.Call.Header',
+          descriptionLangKey: toPeerId.isUser() ? 'Call.Confirm.Discard.Call.ToCall.Text' : 'Call.Confirm.Discard.Call.ToVoice.Text',
+          descriptionLangArgs: [title1, title2],
+          button: {
+            langKey: 'OK'
+          }
+        });
       });
 
       if(!currentCall.isClosing) {
@@ -1202,16 +1212,18 @@ export class AppImManager extends EventListenerBase<{
   private async discardGroupCallConfirmation(toPeerId: PeerId) {
     const currentGroupCall = groupCallsController.groupCall;
     if(currentGroupCall) {
-      await confirmationPopup({
-        titleLangKey: 'Call.Confirm.Discard.Voice.Header',
-        descriptionLangKey: toPeerId.isUser() ? 'Call.Confirm.Discard.Voice.ToCall.Text' : 'Call.Confirm.Discard.Voice.ToVoice.Text',
-        descriptionLangArgs: [
-          new PeerTitle({peerId: currentGroupCall.chatId.toPeerId(true)}).element,
-          new PeerTitle({peerId: toPeerId}).element
-        ],
-        button: {
-          langKey: 'OK'
-        }
+      await Promise.all([
+        wrapPeerTitle({peerId: currentGroupCall.chatId.toPeerId(true)}),
+        wrapPeerTitle({peerId: toPeerId})
+      ]).then(([title1, title2]) => {
+        return confirmationPopup({
+          titleLangKey: 'Call.Confirm.Discard.Voice.Header',
+          descriptionLangKey: toPeerId.isUser() ? 'Call.Confirm.Discard.Voice.ToCall.Text' : 'Call.Confirm.Discard.Voice.ToVoice.Text',
+          descriptionLangArgs: [title1, title2],
+          button: {
+            langKey: 'OK'
+          }
+        });
       });
 
       if(groupCallsController.groupCall === currentGroupCall) {
@@ -1356,7 +1368,26 @@ export class AppImManager extends EventListenerBase<{
   }
 
   private setSettings = () => {
-    document.documentElement.style.setProperty('--messages-text-size', rootScope.settings.messagesTextSize + 'px');
+    const {messagesTextSize} = rootScope.settings;
+
+    this.customEmojiSize = makeMediaSize(messagesTextSize + 4, messagesTextSize + 4);
+    document.documentElement.style.setProperty('--messages-text-size', messagesTextSize + 'px');
+
+    const firstTime = !this.customEmojiSize;
+    if(!firstTime) {
+      const ellipsisElements = document.querySelectorAll<MiddleEllipsisElement>('middle-ellipsis-element');
+      ellipsisElements.forEach((element) => {
+        element.disconnectedCallback();
+        element.dataset.fontSize = '' + messagesTextSize;
+        if(element.title) element.textContent = element.title;
+        element.connectedCallback();
+      });
+
+      const renderers = document.querySelectorAll<CustomEmojiRendererElement>('.chat custom-emoji-renderer-element');
+      renderers.forEach((renderer) => {
+        renderer.forceRenderAfterSize = true;
+      });
+    }
 
     document.body.classList.toggle('animation-level-0', !rootScope.settings.animationsEnabled);
     document.body.classList.toggle('animation-level-1', false);
@@ -1372,7 +1403,7 @@ export class AppImManager extends EventListenerBase<{
     }, rootScope.settings.animationsEnabled ? 250 : 0, false, true);
 
     lottieLoader.setLoop(rootScope.settings.stickers.loop);
-    animationIntersector.checkAnimations(false);
+    animationIntersector.checkAnimations2(false);
 
     for(const chat of this.chats) {
       chat.setAutoDownloadMedia();
@@ -2167,7 +2198,7 @@ export class AppImManager extends EventListenerBase<{
       return () => replaceContent(element, subtitle || placeholder);
     };
 
-    const placeholder = useWhitespace ? '‎' : ''; // ! HERE U CAN FIND WHITESPACE
+    const placeholder = useWhitespace ? NBSP : ''; // ! HERE U CAN FIND WHITESPACE
     if(!result || result.cached) {
       return await set();
     } else if(needClear) {

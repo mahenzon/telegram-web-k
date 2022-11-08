@@ -9,7 +9,7 @@ import {CancellablePromise} from '../../helpers/cancellablePromise';
 import {clearBadCharsAndTrim} from '../../helpers/cleanSearchText';
 import {formatFullSentTime} from '../../helpers/date';
 import {simulateClickEvent, attachClickEvent} from '../../helpers/dom/clickEvent';
-import replaceContent from '../../helpers/dom/replaceContent';
+import findUpClassName from '../../helpers/dom/findUpClassName';
 import formatBytes from '../../helpers/formatBytes';
 import {MediaSizeType} from '../../helpers/mediaSizes';
 import noop from '../../helpers/noop';
@@ -43,7 +43,7 @@ rootScope.addEventListener('document_downloading', (docId) => {
   });
 });
 
-export default async function wrapDocument({message, withTime, fontWeight, voiceAsMusic, showSender, searchContext, loadPromises, autoDownloadSize, lazyLoadQueue, sizeType, managers = rootScope.managers, cacheContext}: {
+export default async function wrapDocument({message, withTime, fontWeight, voiceAsMusic, showSender, searchContext, loadPromises, autoDownloadSize, lazyLoadQueue, sizeType, managers = rootScope.managers, cacheContext, fontSize}: {
   message: Message.message,
   withTime?: boolean,
   fontWeight?: number,
@@ -55,10 +55,11 @@ export default async function wrapDocument({message, withTime, fontWeight, voice
   lazyLoadQueue?: LazyLoadQueue,
   sizeType?: MediaSizeType,
   managers?: AppManagers,
-  cacheContext?: ThumbCache
+  cacheContext?: ThumbCache,
+  fontSize?: number
 }): Promise<HTMLElement> {
-  if(!fontWeight) fontWeight = 500;
-  if(!sizeType) sizeType = '' as any;
+  fontWeight ??= 500;
+  sizeType ??= '' as any;
   const noAutoDownload = autoDownloadSize === 0;
 
   const doc = ((message.media as MessageMedia.messageMediaDocument).document || ((message.media as MessageMedia.messageMediaWebPage).webpage as WebPage.webPage).document) as MyDocument;
@@ -76,6 +77,7 @@ export default async function wrapDocument({message, withTime, fontWeight, voice
     if(showSender) audioElement.showSender = showSender;
 
     audioElement.dataset.fontWeight = '' + fontWeight;
+    audioElement.dataset.fontSize = '' + fontSize;
     audioElement.dataset.sizeType = sizeType;
     await audioElement.render();
     return audioElement;
@@ -177,6 +179,7 @@ export default async function wrapDocument({message, withTime, fontWeight, voice
   const nameDiv = docDiv.querySelector('.document-name') as HTMLElement;
   const middleEllipsisEl = new MiddleEllipsisElement();
   middleEllipsisEl.dataset.fontWeight = '' + fontWeight;
+  middleEllipsisEl.dataset.fontSize = '' + fontSize;
   middleEllipsisEl.dataset.sizeType = sizeType;
   middleEllipsisEl.textContent = fileName;
   // setInnerHTML(middleEllipsisEl, fileName);
@@ -332,6 +335,10 @@ export default async function wrapDocument({message, withTime, fontWeight, voice
   }
 
   attachClickEvent(docDiv, (e) => {
+    if(findUpClassName(e.target, 'time')) { // prevent downloading by clicking on time
+      return;
+    }
+
     if(preloader) {
       preloader.onClick(e);
     } else {

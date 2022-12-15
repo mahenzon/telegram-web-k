@@ -141,7 +141,7 @@ export class CustomEmojiElement extends HTMLElement {
     }
 
     if(globalLazyLoadQueue) {
-      globalLazyLoadQueue.unobserve(this);
+      globalLazyLoadQueue.delete({div: this});
     }
 
     /* this.disconnectedCallback =  */this.elements =
@@ -784,7 +784,7 @@ export class CustomEmojiRendererElement extends HTMLElement {
                   div: element,
                   load: () => {
                     elements.forEach((element) => {
-                      globalLazyLoadQueue.unobserve(element);
+                      globalLazyLoadQueue.delete({div: element});
                     });
 
                     return l();
@@ -1087,7 +1087,7 @@ export default function wrapRichText(text: string, options: Partial<{
           // const styleName = IS_SAFARI ? 'text-decoration' : 'text-decoration-line';
           // element.style.cssText = `${styleName}: line-through;`;
           element.style.fontFamily = 'markup-strikethrough';
-        } else if(!options.noTextFormat) {
+        } else/*  if(!options.noTextFormat) */ {
           element = document.createElement('del');
         }
 

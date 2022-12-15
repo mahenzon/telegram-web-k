@@ -182,6 +182,7 @@ namespace I18n {
   }
 
   export function loadLangPack(langCode: string, web?: boolean) {
+    web = true;
     requestedServerLanguage = true;
     const managers = rootScope.managers;
     return Promise.all([

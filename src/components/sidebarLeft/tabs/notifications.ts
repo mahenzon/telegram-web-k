@@ -19,7 +19,7 @@ import apiManagerProxy from '../../../lib/mtproto/mtprotoworker';
 type InputNotifyKey = Exclude<InputNotifyPeer['_'], 'inputNotifyPeer'>;
 
 export default class AppNotificationsTab extends SliderSuperTabEventable {
-  protected init() {
+  public init() {
     this.header.classList.add('with-border');
     this.container.classList.add('notifications-container', 'with-border');
     this.setTitle('Telegram.NotificationSettingsViewController');
@@ -36,13 +36,15 @@ export default class AppNotificationsTab extends SliderSuperTabEventable {
       const enabledRow = new Row({
         checkboxField: new CheckboxField({text: options.typeText, checked: true}),
         subtitleLangKey: 'Loading',
-        listenerSetter: this.listenerSetter
+        listenerSetter: this.listenerSetter,
+        withCheckboxSubtitle: true
       });
 
       const previewEnabledRow = new Row({
         checkboxField: new CheckboxField({text: 'MessagePreview', checked: true}),
         subtitleLangKey: 'Loading',
-        listenerSetter: this.listenerSetter
+        listenerSetter: this.listenerSetter,
+        withCheckboxSubtitle: true
       });
 
       section.content.append(enabledRow.container, previewEnabledRow.container);
@@ -114,13 +116,15 @@ export default class AppNotificationsTab extends SliderSuperTabEventable {
       const contactsSignUpRow = new Row({
         checkboxField: new CheckboxField({text: 'ContactJoined', checked: true}),
         subtitleLangKey: 'Loading',
-        listenerSetter: this.listenerSetter
+        listenerSetter: this.listenerSetter,
+        withCheckboxSubtitle: true
       });
 
       const soundRow = new Row({
         checkboxField: new CheckboxField({text: 'Notifications.Sound', checked: true, stateKey: 'settings.notifications.sound', listenerSetter: this.listenerSetter}),
         subtitleLangKey: 'Loading',
-        listenerSetter: this.listenerSetter
+        listenerSetter: this.listenerSetter,
+        withCheckboxSubtitle: true
       });
 
       apiManagerProxy.getState().then((state) => {

@@ -27,7 +27,7 @@ export default class AppEditContactTab extends SliderSuperTab {
   private editPeer: EditPeer;
   public peerId: PeerId;
 
-  protected async init() {
+  public async init() {
     this.container.classList.add('edit-peer-container', 'edit-contact-container');
     const isNew = !(await this.managers.appUsersManager.isContact(this.peerId.toUserId()));
     this.setTitle(isNew ? 'AddContactTitle' : 'Edit');
@@ -118,6 +118,7 @@ export default class AppEditContactTab extends SliderSuperTab {
         if(!isNew) {
           const notificationsRow = new Row({
             checkboxField: notificationsCheckboxField,
+            withCheckboxSubtitle: true,
             listenerSetter: this.listenerSetter
           });
 

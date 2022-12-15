@@ -90,9 +90,7 @@ export class AppSidebarLeft extends SidebarSlider {
       this.createTab(AppAddMembersTab).open({
         type: 'chat',
         skippable: false,
-        takeOut: (peerIds) => {
-          this.createTab(AppNewGroupTab).open(peerIds);
-        },
+        takeOut: (peerIds) => this.createTab(AppNewGroupTab).open(peerIds),
         title: 'GroupAddMembers',
         placeholder: 'SendMessageTo'
       });
@@ -131,7 +129,7 @@ export class AppSidebarLeft extends SidebarSlider {
     });
 
     const menuButtons: (ButtonMenuItemOptions & {verify?: () => boolean | Promise<boolean>})[] = [{
-      icon: 'saved',
+      icon: 'savedmessages',
       text: 'SavedMessages',
       onClick: () => {
         setTimeout(() => { // menu doesn't close if no timeout (lol)

@@ -269,7 +269,7 @@ export default class ChatInput {
     this.inputContainer.append(this.rowsWrapperWrapper, fakeRowsWrapper, fakeSelectionWrapper);
     this.chatInput.append(this.inputContainer);
 
-    this.goDownBtn = ButtonCorner({icon: 'arrow_down', className: 'bubbles-corner-button bubbles-go-down hide'});
+    this.goDownBtn = ButtonCorner({icon: 'arrow_down', className: 'bubbles-corner-button chat-secondary-button bubbles-go-down hide'});
     this.inputContainer.append(this.goDownBtn);
 
     attachClickEvent(this.goDownBtn, (e) => {
@@ -484,7 +484,7 @@ export default class ChatInput {
       this.goDownUnreadBadge.classList.add('badge', 'badge-24', 'badge-primary');
       this.goDownBtn.append(this.goDownUnreadBadge);
 
-      this.goMentionBtn = ButtonCorner({icon: 'mention', className: 'bubbles-corner-button bubbles-go-mention'});
+      this.goMentionBtn = ButtonCorner({icon: 'mention', className: 'bubbles-corner-button chat-secondary-button bubbles-go-mention'});
       this.goMentionUnreadBadge = document.createElement('span');
       this.goMentionUnreadBadge.classList.add('badge', 'badge-24', 'badge-primary');
       this.goMentionBtn.append(this.goMentionUnreadBadge);
@@ -627,7 +627,7 @@ export default class ChatInput {
     this.inlineHelper = new InlineHelper(this.rowsWrapper, this.autocompleteHelperController, this.chat, this.managers);
     this.rowsWrapper.append(this.newMessageWrapper);
 
-    this.btnCancelRecord = ButtonIcon('delete btn-circle z-depth-1 btn-record-cancel');
+    this.btnCancelRecord = ButtonIcon('binfilled btn-circle btn-record-cancel chat-secondary-button');
 
     this.btnSendContainer = document.createElement('div');
     this.btnSendContainer.classList.add('btn-send-container');
@@ -635,7 +635,7 @@ export default class ChatInput {
     this.recordRippleEl = document.createElement('div');
     this.recordRippleEl.classList.add('record-ripple');
 
-    this.btnSend = ButtonIcon('none btn-circle z-depth-1 btn-send animated-button-icon');
+    this.btnSend = ButtonIcon('none btn-circle btn-send animated-button-icon');
     this.btnSend.insertAdjacentHTML('afterbegin', `
     <span class="tgico tgico-send"></span>
     <span class="tgico tgico-schedule"></span>
@@ -1268,7 +1268,7 @@ export default class ChatInput {
       goDownBtn.classList.toggle('is-broadcast', isBroadcast);
       goDownBtn.classList.remove('hide');
 
-      this.messageInputField.onFakeInput();
+      this.messageInputField?.onFakeInput();
 
       if(this.goDownUnreadBadge) {
         this.setUnreadCount();
@@ -1512,10 +1512,17 @@ export default class ChatInput {
     });
 
     if(IS_TOUCH_SUPPORTED) {
-      attachClickEvent(this.messageInput, () => {
+      attachClickEvent(this.messageInput, (e) => {
+        if(emoticonsDropdown.isActive()) {
+          emoticonsDropdown.toggle(false);
+          blurActiveElement();
+          cancelEvent(e);
+          // this.messageInput.focus();
+          return;
+        }
+
         this.appImManager.selectTab(1); // * set chat tab for album orientation
         // this.saveScroll();
-        emoticonsDropdown.toggle(false);
       }, {listenerSetter: this.listenerSetter});
 
       /* this.listenerSetter.add(window)('resize', () => {
@@ -2604,7 +2611,7 @@ export default class ChatInput {
       return false;
     }
 
-    if(getStickerEffectThumb(document) && !rootScope.premium) {
+    if(document.sticker && getStickerEffectThumb(document) && !rootScope.premium) {
       return false;
     }
 

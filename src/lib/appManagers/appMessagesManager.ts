@@ -26,7 +26,7 @@ import {getFileNameByLocation} from '../../helpers/fileName';
 import DEBUG from '../../config/debug';
 import SlicedArray, {Slice, SliceEnd} from '../../helpers/slicedArray';
 import {FOLDER_ID_ALL, MUTE_UNTIL, NULL_PEER_ID, REAL_FOLDER_ID, REPLIES_HIDDEN_CHANNEL_ID, REPLIES_PEER_ID, SERVICE_PEER_ID, THUMB_TYPE_FULL} from '../mtproto/mtproto_config';
-import telegramMeWebManager from '../mtproto/telegramMeWebManager';
+// import telegramMeWebManager from '../mtproto/telegramMeWebManager';
 import {getMiddleware} from '../../helpers/middleware';
 import assumeType from '../../helpers/assumeType';
 import copy from '../../helpers/object/copy';
@@ -1492,6 +1492,8 @@ export class AppMessagesManager extends AppManager {
       sequential: options.sequential
     };
 
+    this.pendingTopMsgs[peerId] = messageId;
+
     if(!options.isGroupedItem && message.send) {
       callbacks.push(() => {
         if(options.clearDraft) {
@@ -1873,17 +1875,13 @@ export class AppMessagesManager extends AppManager {
         this.log('messages.getDialogs result:', dialogsResult.dialogs, {...dialogsResult.dialogs[0]});
       }
 
-      /* if(!offsetDate) {
-        telegramMeWebService.setAuthorized(true);
-      } */
-
       // can reset pinned order here
       if(!offsetId && !offsetDate && !offsetPeerId && folderId !== GLOBAL_FOLDER_ID) {
         this.dialogsStorage.resetPinnedOrder(folderId);
       }
 
       if(!offsetDate) {
-        telegramMeWebManager.setAuthorized(true);
+        // telegramMeWebManager.setAuthorized(true);
         this.appDraftsManager.addMissedDialogs();
       }
 
@@ -1993,7 +1991,12 @@ export class AppMessagesManager extends AppManager {
     dropAuthor: boolean,
     dropCaptions: boolean,
     sendAsPeerId: PeerId,
+    replyToMsgId?: number,  // will be ignored
+    threadId?: number       // will be ignored
   }> = {}) {
+    delete options.replyToMsgId;
+    delete options.threadId;
+
     peerId = this.appPeersManager.getPeerMigratedTo(peerId) || peerId;
     mids = mids.slice().sort((a, b) => a - b);
 
@@ -2816,9 +2819,8 @@ export class AppMessagesManager extends AppManager {
 
     if(!isMessage && message.action) {
       const action = message.action as MessageAction;
-      let migrateFrom: PeerId;
-      let migrateTo: PeerId;
       const suffix = message.fromId === this.appUsersManager.getSelf().id ? 'You' : '';
+      let migrateFrom: PeerId, migrateTo: PeerId;
 
       if((action as MessageAction.messageActionChatEditPhoto).photo) {
         (action as MessageAction.messageActionChatEditPhoto).photo = this.appPhotosManager.savePhoto((action as MessageAction.messageActionChatEditPhoto).photo, mediaContext);
@@ -3582,14 +3584,20 @@ export class AppMessagesManager extends AppManager {
     let newMaxSeenId = 0;
     const map = this.newDialogsToHandle;
     for(const [peerId, dialog] of map) {
+      let good = false;
       if(!dialog) {
         this.reloadConversation(peerId.toPeerId());
-        map.delete(peerId);
-      } else {
+      } else if(this.dialogsStorage.getDialogOnly(peerId)) { // * dialog can be already dropped
         this.dialogsStorage.pushDialog(dialog);
-        if(!this.appPeersManager.isChannel(peerId.toPeerId())) {
+        if(!this.appPeersManager.isChannel(peerId)) {
           newMaxSeenId = Math.max(newMaxSeenId, dialog.top_message || 0);
         }
+
+        good = true;
+      }
+
+      if(!good) {
+        map.delete(peerId);
       }
     }
 

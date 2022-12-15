@@ -4,7 +4,7 @@
  * https://github.com/morethanwords/tweb/blob/master/LICENSE
  */
 
-import CheckboxField from './checkboxField';
+import CheckboxField, {CheckboxFieldOptions} from './checkboxField';
 import RadioField from './radioField';
 import ripple from './ripple';
 import {SliderSuperTab} from './slider';
@@ -16,12 +16,29 @@ import {attachClickEvent} from '../helpers/dom/clickEvent';
 import ListenerSetter from '../helpers/listenerSetter';
 import Button from './button';
 
+type K = string | HTMLElement | DocumentFragment | true;
+
+const setContent = (element: HTMLElement, content: K) => {
+  if(content === true) {
+
+  } else if(typeof(content) === 'string') {
+    setInnerHTML(element, content);
+  } else {
+    element.append(content);
+  }
+};
+
+export type RowMediaSizeType = 'small' | 'medium' | 'big' | 'abitbigger' | 'bigger';
+
 export default class Row {
   public container: HTMLElement;
-  public title: HTMLDivElement;
+  public title: HTMLElement;
+  public titleRow: HTMLElement;
   public titleRight: HTMLElement;
-  public subtitle: HTMLElement;
   public media: HTMLElement;
+
+  public subtitleRow: HTMLElement;
+  public subtitleRight: HTMLElement;
 
   public checkboxField: CheckboxField;
   public radioField: RadioField;
@@ -30,18 +47,22 @@ export default class Row {
 
   public buttonRight: HTMLElement;
 
+  private _subtitle: HTMLElement;
+
   constructor(options: Partial<{
     icon: string,
-    subtitle: string | HTMLElement | DocumentFragment,
+    subtitle: K,
     subtitleLangKey: LangPackKey,
     subtitleLangArgs: any[],
+    subtitleRight: K,
     radioField: Row['radioField'],
     checkboxField: Row['checkboxField'],
-    noCheckboxSubtitle: boolean,
-    title: string | HTMLElement | DocumentFragment,
+    checkboxFieldOptions: CheckboxFieldOptions,
+    withCheckboxSubtitle: boolean,
+    title: K,
     titleLangKey: LangPackKey,
-    titleRight: string | HTMLElement,
-    titleRightSecondary: string | HTMLElement,
+    titleRight: K,
+    titleRightSecondary: K,
     clickable: boolean | ((e: Event) => void),
     navigationTab: SliderSuperTab,
     havePadding: boolean,
@@ -49,24 +70,42 @@ export default class Row {
     noWrap: boolean,
     listenerSetter: ListenerSetter,
     buttonRight?: HTMLElement | boolean,
-    buttonRightLangKey: LangPackKey
+    buttonRightLangKey: LangPackKey,
+    asLink: boolean
   }> = {}) {
-    this.container = document.createElement(options.radioField || options.checkboxField ? 'label' : 'div');
-    this.container.classList.add('row');
+    if(options.checkboxFieldOptions) {
+      options.checkboxField = new CheckboxField({
+        listenerSetter: options.listenerSetter,
+        ...options.checkboxFieldOptions
+      });
+    }
 
-    this.subtitle = document.createElement('div');
-    this.subtitle.classList.add('row-subtitle');
-    this.subtitle.setAttribute('dir', 'auto');
+    const tagName = options.asLink ? 'a' : (options.radioField || options.checkboxField ? 'label' : 'div');
+    this.container = document.createElement(tagName);
+    this.container.classList.add('row', 'no-subtitle');
+
+    if(options.noWrap) {
+      this.container.classList.add('no-wrap');
+    }
+
     if(options.subtitle) {
-      if(typeof(options.subtitle) === 'string') {
-        setInnerHTML(this.subtitle, options.subtitle);
-      } else {
-        this.subtitle.append(options.subtitle);
+      const subtitle = this.subtitle;
+      setContent(subtitle, options.subtitle);
+
+      if(options.noWrap) subtitle.classList.add('no-wrap');
+
+      if(options.subtitleRight) {
+        this.container.append(this.subtitleRow = this.createRow());
+        this.subtitleRow.classList.add('row-subtitle-row');
+        const subtitleRight = this.subtitleRight = document.createElement('div');
+        subtitleRight.classList.add('row-subtitle', 'row-subtitle-right');
+
+        setContent(subtitleRight, options.subtitleRight);
+        this.subtitleRow.append(subtitle, subtitleRight);
       }
     } else if(options.subtitleLangKey) {
       this.subtitle.append(i18n(options.subtitleLangKey, options.subtitleLangArgs));
     }
-    this.container.append(this.subtitle);
 
     let havePadding = !!options.havePadding;
     if(options.radioField || options.checkboxField) {
@@ -88,7 +127,7 @@ export default class Row {
           this.container.append(this.checkboxField.label);
         }
 
-        if(!options.noCheckboxSubtitle && !isToggle) {
+        if(options.withCheckboxSubtitle && !isToggle) {
           const onChange = () => {
             replaceContent(this.subtitle, i18n(this.checkboxField.input.checked ? 'Checkbox.Enabled' : 'Checkbox.Disabled'));
           };
@@ -104,45 +143,34 @@ export default class Row {
 
     if(options.title || options.titleLangKey) {
       let c: HTMLElement;
-      const titleRight = options.titleRight || options.titleRightSecondary;
-      if(titleRight) {
-        c = document.createElement('div');
-        c.classList.add('row-title-row');
-        this.container.append(c);
+      const titleRightContent = options.titleRight || options.titleRightSecondary;
+      if(titleRightContent) {
+        this.container.append(c = this.titleRow = this.createRow());
+        this.titleRow.classList.add('row-title-row');
       } else {
         c = this.container;
       }
 
-      this.title = document.createElement('div');
-      this.title.classList.add('row-title');
-      this.title.setAttribute('dir', 'auto');
+      this.title = this.createTitle();
       if(options.noWrap) this.title.classList.add('no-wrap');
       if(options.title) {
-        if(typeof(options.title) === 'string') {
-          this.title.innerHTML = options.title;
-        } else {
-          this.title.append(options.title);
-        }
-      } else {
+        setContent(this.title, options.title);
+      } else if(options.titleLangKey) {
         this.title.append(i18n(options.titleLangKey));
       }
+
       c.append(this.title);
 
-      if(titleRight) {
-        const titleRightEl = this.titleRight = document.createElement('div');
-        titleRightEl.classList.add('row-title', 'row-title-right');
+      if(titleRightContent) {
+        const titleRight = this.titleRight = document.createElement('div');
+        titleRight.classList.add('row-title', 'row-title-right');
 
         if(options.titleRightSecondary) {
-          titleRightEl.classList.add('row-title-right-secondary');
+          titleRight.classList.add('row-title-right-secondary');
         }
 
-        if(typeof(titleRight) === 'string') {
-          titleRightEl.innerHTML = titleRight;
-        } else {
-          titleRightEl.append(titleRight);
-        }
-
-        c.append(titleRightEl);
+        setContent(titleRight, titleRightContent);
+        c.append(titleRight);
       }
     }
 
@@ -187,10 +215,42 @@ export default class Row {
     }
   }
 
-  public createMedia(size?: 'small') {
+  public get subtitle() {
+    return this._subtitle ?? (this._subtitle = this.createSubtitle());
+  }
+
+  private createRow() {
+    const c = document.createElement('div');
+    c.classList.add('row-row');
+    return c;
+  }
+
+  private createTitle() {
+    const title = document.createElement('div');
+    title.classList.add('row-title');
+    title.setAttribute('dir', 'auto');
+    return title;
+  }
+
+  private createSubtitle() {
+    const subtitle = document.createElement('div');
+    subtitle.classList.add('row-subtitle');
+    subtitle.setAttribute('dir', 'auto');
+    if(this.title) this.title.after(subtitle);
+    else this.container.prepend(subtitle);
+    this.container.classList.remove('no-subtitle');
+    return subtitle;
+  }
+
+  public createMedia(size?: RowMediaSizeType) {
+    const media = document.createElement('div');
+    return this.applyMediaElement(media, size);
+  }
+
+  public applyMediaElement(media: HTMLElement, size?: RowMediaSizeType) {
     this.container.classList.add('row-with-padding');
 
-    const media = this.media = document.createElement('div');
+    this.media = media;
     media.classList.add('row-media');
 
     if(size) {
@@ -202,6 +262,10 @@ export default class Row {
     return media;
   }
 }
+
+export const CreateRowFromCheckboxField = (checkboxField: CheckboxField) => {
+  return new Row({checkboxField, listenerSetter: checkboxField.listenerSetter});
+};
 
 export const RadioFormFromRows = (rows: Row[], onChange: (value: string) => void) => {
   return RadioForm(rows.map((r) => ({container: r.container, input: r.radioField.input})), onChange);

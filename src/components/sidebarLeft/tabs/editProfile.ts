@@ -12,6 +12,7 @@ import {i18n, i18n_} from '../../../lib/langPack';
 import {attachClickEvent} from '../../../helpers/dom/clickEvent';
 import rootScope from '../../../lib/rootScope';
 import {generateSection, SettingSection} from '..';
+import anchorCopy from '../../../helpers/dom/anchorCopy';
 
 // TODO: аватарка не поменяется в этой вкладке после изменения почему-то (если поставить в другом клиенте, и потом тут проверить, для этого ещё вышел в чатлист)
 
@@ -26,18 +27,27 @@ export default class AppEditProfileTab extends SliderSuperTab {
 
   private editPeer: EditPeer;
 
-  protected async init() {
+  public static getInitArgs() {
+    return {
+      bioMaxLength: rootScope.managers.apiManager.getLimit('bio'),
+      user: rootScope.managers.appUsersManager.getSelf(),
+      userFull: rootScope.managers.appProfileManager.getProfile(rootScope.myId.toUserId())
+    };
+  }
+
+  public async init(p: ReturnType<typeof AppEditProfileTab['getInitArgs']>) {
     this.container.classList.add('edit-profile-container');
     this.setTitle('EditAccount.Title');
 
     const inputFields: InputField[] = [];
+
+    const [bioMaxLength, user, userFull] = await Promise.all([p.bioMaxLength, p.user, p.userFull]);
 
     {
       const section = generateSection(this.scrollable, undefined, 'Bio.Description');
       const inputWrapper = document.createElement('div');
       inputWrapper.classList.add('input-wrapper');
 
-      const bioMaxLength = await this.managers.apiManager.getLimit('bio');
       this.firstNameInputField = new InputField({
         label: 'EditProfile.FirstNameLabel',
         name: 'first-name',
@@ -105,10 +115,7 @@ export default class AppEditProfileTab extends SliderSuperTab {
       const profileUrlContainer = this.profileUrlContainer = document.createElement('div');
       profileUrlContainer.classList.add('profile-url-container');
 
-      const profileUrlAnchor = this.profileUrlAnchor = document.createElement('a');
-      profileUrlAnchor.classList.add('profile-url');
-      profileUrlAnchor.href = '#';
-      profileUrlAnchor.target = '_blank';
+      const profileUrlAnchor = this.profileUrlAnchor = anchorCopy();
 
       profileUrlContainer.append(i18n('UsernameHelpLink', [profileUrlAnchor]));
 
@@ -124,7 +131,12 @@ export default class AppEditProfileTab extends SliderSuperTab {
 
       const promises: Promise<any>[] = [];
 
-      promises.push(this.managers.appProfileManager.updateProfile(this.firstNameInputField.value, this.lastNameInputField.value, this.bioInputField.value).then(() => {
+      const profilePromise = this.managers.appProfileManager.updateProfile(
+        this.firstNameInputField.value,
+        this.lastNameInputField.value,
+        this.bioInputField.value
+      );
+      promises.push(profilePromise.then(() => {
         this.close();
       }, (err) => {
         console.error('updateProfile error:', err);
@@ -145,10 +157,6 @@ export default class AppEditProfileTab extends SliderSuperTab {
       });
     }, {listenerSetter: this.listenerSetter});
 
-    const user = await this.managers.appUsersManager.getSelf();
-
-    const userFull = await this.managers.appProfileManager.getProfile(user.id, true);
-
     this.firstNameInputField.setOriginalValue(user.first_name, true);
     this.lastNameInputField.setOriginalValue(user.last_name, true);
     this.bioInputField.setOriginalValue(userFull.about, true);
@@ -163,9 +171,7 @@ export default class AppEditProfileTab extends SliderSuperTab {
       this.profileUrlContainer.style.display = 'none';
     } else {
       this.profileUrlContainer.style.display = '';
-      const url = 'https://t.me/' + this.usernameInputField.value;
-      this.profileUrlAnchor.innerText = url;
-      this.profileUrlAnchor.href = url;
+      this.profileUrlAnchor.replaceWith(this.profileUrlAnchor = anchorCopy({mePath: this.usernameInputField.value}));
     }
   }
 }

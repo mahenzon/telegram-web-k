@@ -16,6 +16,13 @@ $row-border-radius: $border-radius-medium;
   flex-direction: column;
   justify-content: center;
 
+  &.no-subtitle,
+  &.row-small {
+    min-height: 3rem;
+    padding-top: .1875rem;
+    padding-bottom: .1875rem;
+  }
+
   @include animation-level(2) {
     transition: opacity var(--transition-standard-in);
   }
@@ -25,23 +32,41 @@ $row-border-radius: $border-radius-medium;
     opacity: var(--disabled-opacity);
   }
 
+  &.no-wrap {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
   a {
     position: relative;
     z-index: 1;
   }
 
-  &-title-row {
+  &-title-row,
+  & > &-title {
+    order: 0;
+  }
+
+  &-big {
+    min-height: 4.5rem;
+    padding: .5625rem .75rem .5625rem 1rem;
+  }
+
+  &-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    order: 0;
 
-    .row-title {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    .row-title,
+    .row-subtitle {
+      @include text-overflow(true);
       flex: 1 1 auto;
     }
+  }
+
+  &-subtitle-row,
+  & > &-subtitle {
+    order: 1;
   }
 
   // &-title,
@@ -52,28 +77,35 @@ $row-border-radius: $border-radius-medium;
 
   &-title {
     color: var(--primary-text-color);
+    font-size: var(--font-size);
     line-height: var(--line-height);
-    order: 0;
 
     @include text-overflow(false);
 
     &-right {
-      flex: 0 0 auto !important;
-      margin-left: 1rem;
-
       &-secondary {
         color: var(--secondary-text-color);
       }
     }
   }
 
+  &-title-right,
+  &-subtitle-right {
+    flex: 0 0 auto !important;
+    margin-left: 1rem;
+  }
+
   &-midtitle {
-    font-size: .875rem;
+    font-size: var(--font-size-14);
     order: 1;
   }
 
   &-with-padding {
     padding-left: 4.5rem;
+
+    @include respond-to(handhelds) {
+      padding-left: 4rem;
+    }
 
     .row-title.tgico:before {
       position: absolute;
@@ -81,12 +113,15 @@ $row-border-radius: $border-radius-medium;
       font-size: 1.5rem;
       color: var(--secondary-text-color);
       pointer-events: none;
-      margin-top: -.125rem;
+
+      // margin-top: -.125rem;
+      top: 50%;
+      transform: translateY(-50%);
     }
 
-    .row-subtitle:not(:empty):not(.hide) + .row-title.tgico:before {
-      margin-top: .25rem;
-    }
+    // .row-subtitle:not(:empty):not(.hide) + .row-title.tgico:before {
+    //   margin-top: .25rem;
+    // }
   }
 
   &-clickable {
@@ -131,19 +166,16 @@ $row-border-radius: $border-radius-medium;
     }
 
     &-toggle {
-      margin: 0;
-      margin-right: .125rem;
+      margin: 0 .125rem;
       padding: 0;
     }
   }
 
   &-subtitle {
     color: var(--secondary-text-color) !important;
-    font-size: .875rem !important;
+    font-size: var(--font-size-14) !important;
     line-height: var(--line-height-14);
-    margin-top: .125rem;
-    margin-bottom: .0625rem;
-    order: 1;
+    margin-top: .1875rem;
 
     &:empty {
       display: none;
@@ -151,19 +183,38 @@ $row-border-radius: $border-radius-medium;
   }
 
   &-media {
-    width: 3rem !important;
-    height: 3rem !important;
+    width: 2.25rem !important;
+    height: 2.25rem !important;
     position: absolute !important;
     margin: 0 !important;
-    left: .5rem;
+    left: .625rem;
     display: flex;
     align-items: center;
     justify-content: center;
+    pointer-events: none;
 
     &-small {
       width: 2rem !important;
       height: 2rem !important;
       left: .75rem !important;
+    }
+
+    &-abitbigger {
+      width: 2.625rem !important;
+      height: 2.625rem !important;
+      left: .75rem !important;
+    }
+
+    &-big {
+      width: 3rem !important;
+      height: 3rem !important;
+      left: .5rem !important;
+    }
+
+    &-bigger {
+      width: 3.375rem !important;
+      height: 3.375rem !important;
+      left: .5625rem !important; // it's wrong but old chatlist has it
     }
   }
 

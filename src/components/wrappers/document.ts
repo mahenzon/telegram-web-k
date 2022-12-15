@@ -60,6 +60,7 @@ export default async function wrapDocument({message, withTime, fontWeight, voice
 }): Promise<HTMLElement> {
   fontWeight ??= 500;
   sizeType ??= '' as any;
+  fontSize ??= 0;
   const noAutoDownload = autoDownloadSize === 0;
 
   const doc = ((message.media as MessageMedia.messageMediaDocument).document || ((message.media as MessageMedia.messageMediaWebPage).webpage as WebPage.webPage).document) as MyDocument;
@@ -113,7 +114,7 @@ export default async function wrapDocument({message, withTime, fontWeight, voice
 
     const imgs: (HTMLImageElement | HTMLCanvasElement | HTMLVideoElement)[] = [];
     // ! WARNING, use thumbs for check when thumb will be generated for media
-    if(message.pFlags.is_outgoing && ['photo', 'video'].includes(doc.type)) {
+    if(message.pFlags.is_outgoing && ['photo', 'video'].includes(doc.type) && cacheContext.url) {
       icoDiv.innerHTML = `<img src="${cacheContext.url}">`;
       imgs.push(icoDiv.firstElementChild as HTMLImageElement);
     } else {

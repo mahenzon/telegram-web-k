@@ -4,7 +4,7 @@
  * https://github.com/morethanwords/tweb/blob/master/LICENSE
  */
 
-import {SliderSuperTabEventable} from '../../sliderTab';
+import SliderSuperTab, {SliderSuperTabEventable} from '../../sliderTab';
 import {SettingSection} from '..';
 import Row from '../../row';
 import {AccountPassword, Authorization, InputPrivacyKey, Updates} from '../../../layer';
@@ -38,7 +38,15 @@ export default class AppPrivacyAndSecurityTab extends SliderSuperTabEventable {
   private activeSessionsRow: Row;
   private authorizations: Authorization.authorization[];
 
-  protected init() {
+  public static getInitArgs(fromTab: SliderSuperTab) {
+    return {
+      appConfig: fromTab.managers.apiManager.getAppConfig(),
+      globalPrivacy: fromTab.managers.appPrivacyManager.getGlobalPrivacySettings(),
+      contentSettings: fromTab.managers.apiManager.invokeApi('account.getContentSettings')
+    };
+  }
+
+  public init(p: ReturnType<typeof AppPrivacyAndSecurityTab['getInitArgs']>) {
     this.header.classList.add('with-border');
     this.container.classList.add('dont-u-dare-block-me');
     this.setTitle('PrivacySettings');
@@ -271,8 +279,7 @@ export default class AppPrivacyAndSecurityTab extends SliderSuperTabEventable {
 
       const checkboxField = new CheckboxField({text: 'ArchiveAndMute'});
       const row = new Row({
-        checkboxField,
-        noCheckboxSubtitle: true
+        checkboxField
       });
 
       section.content.append(row.container);
@@ -280,16 +287,16 @@ export default class AppPrivacyAndSecurityTab extends SliderSuperTabEventable {
       let enabled: boolean, destroyed: boolean;
       this.eventListener.addEventListener('destroy', () => {
         destroyed = true;
-        if(enabled === undefined) return;
-        this.managers.appPrivacyManager.setGlobalPrivacySettings({
+        if(enabled === undefined || enabled === checkboxField.checked) return;
+        return this.managers.appPrivacyManager.setGlobalPrivacySettings({
           _: 'globalPrivacySettings',
           archive_and_mute_new_noncontact_peers: checkboxField.checked
         });
       }, {once: true});
 
       const promise = Promise.all([
-        this.managers.apiManager.getAppConfig(),
-        this.managers.appPrivacyManager.getGlobalPrivacySettings()
+        p.appConfig,
+        p.globalPrivacy
       ]).then(([appConfig, settings]) => {
         if(destroyed) {
           return;
@@ -302,7 +309,7 @@ export default class AppPrivacyAndSecurityTab extends SliderSuperTabEventable {
         this.listenerSetter.add(rootScope)('premium_toggle', onPremiumToggle);
         onPremiumToggle(rootScope.premium);
 
-        enabled = settings.archive_and_mute_new_noncontact_peers;
+        enabled = !!settings.archive_and_mute_new_noncontact_peers;
 
         checkboxField.setValueSilently(enabled);
       });
@@ -318,8 +325,7 @@ export default class AppPrivacyAndSecurityTab extends SliderSuperTabEventable {
 
       const checkboxField = new CheckboxField({text: 'PrivacyAndSecurity.SensitiveText'});
       const row = new Row({
-        checkboxField,
-        noCheckboxSubtitle: true
+        checkboxField
       });
 
       section.content.append(row.container);
@@ -333,12 +339,12 @@ export default class AppPrivacyAndSecurityTab extends SliderSuperTabEventable {
           return;
         }
 
-        this.managers.apiManager.invokeApi('account.setContentSettings', {
+        return this.managers.apiManager.invokeApi('account.setContentSettings', {
           sensitive_enabled: _enabled
         });
       }, {once: true});
 
-      const promise = this.managers.apiManager.invokeApi('account.getContentSettings').then((settings) => {
+      const promise = p.contentSettings.then((settings) => {
         if(!settings.pFlags.sensitive_can_change) {
           return;
         }

@@ -26,7 +26,7 @@ export default class AppContactsTab extends SliderSuperTab {
   private middleware: ReturnType<typeof getMiddleware>;
   private sortedUserList: SortedUserList;
 
-  protected init() {
+  public init() {
     this.container.id = 'contacts-container';
 
     // this.list = appDialogsManager.createChatList(/* {avatarSize: 48, handheldsSize: 66} */);
@@ -53,6 +53,8 @@ export default class AppContactsTab extends SliderSuperTab {
 
     this.middleware = getMiddleware();
 
+    this.openContacts();
+
     // preload contacts
     // appUsersManager.getContacts();
   }
@@ -73,7 +75,7 @@ export default class AppContactsTab extends SliderSuperTab {
   protected onClose() {
     this.middleware.clean();
     /* // need to clear, and left 1 page for smooth slide
-    let pageCount = appPhotosManager.windowH / 72 * 1.25 | 0;
+    let pageCount = appPhotosManager.windowH / 56 * 1.25 | 0;
     (Array.from(this.list.children) as HTMLElement[]).slice(pageCount).forEach((el) => el.remove()); */
   }
 
@@ -83,11 +85,6 @@ export default class AppContactsTab extends SliderSuperTab {
   }
 
   public openContacts(query?: string) {
-    if(this.init) {
-      this.init();
-      this.init = null;
-    }
-
     this.middleware.clean();
     const middleware = this.middleware.get();
     this.scrollable.onScrolledBottom = null;
@@ -101,7 +98,7 @@ export default class AppContactsTab extends SliderSuperTab {
       const sortedUserList = this.sortedUserList = this.createList();
 
       let renderPage = () => {
-        const pageCount = windowSize.height / 72 * 1.25 | 0;
+        const pageCount = windowSize.height / 56 * 1.25 | 0;
         const arr = contacts.splice(0, pageCount); // надо splice!
 
         arr.forEach((peerId) => {
@@ -125,10 +122,5 @@ export default class AppContactsTab extends SliderSuperTab {
 
       replaceContent(this.scrollable.container, sortedUserList.list);
     });
-  }
-
-  public open() {
-    this.openContacts();
-    return super.open();
   }
 }
